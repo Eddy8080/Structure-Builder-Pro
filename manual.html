@@ -1,0 +1,242 @@
+ <!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manual - Structure Builder Pro</title>
+    <style>
+        :root {
+            --primary: #3b82f6;
+            --primary-hover: #2563eb;
+            --bg: #0f172a;
+            --card: #1e293b;
+            --text: #f1f5f9;
+            --text-muted: #94a3b8;
+            --accent: #10b981;
+            --border: rgba(255, 255, 255, 0.1);
+        }
+
+        *, *::before, *::after {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            text-rendering: optimizeLegibility;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        header {
+            margin-bottom: 40px;
+        }
+
+        h1, h2, h3 { 
+            color: var(--primary); 
+            margin-top: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        h1 small {
+            font-size: 1rem;
+            color: var(--text-muted);
+            font-weight: normal;
+        }
+
+        .card {
+            background: var(--card);
+            padding: 25px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            border: 1px solid var(--border);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        code {
+            background: #000;
+            padding: 2px 6px;
+            border-radius: 4px;
+            color: #fbbf24;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.9em;
+        }
+
+        .shortcut-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .shortcut-item {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 12px;
+            border-radius: 8px;
+            border-left: 4px solid var(--primary);
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+        }
+
+        .badge-new { 
+            background: var(--accent); 
+            color: #fff; 
+        }
+
+        .flex-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .flex-title i {
+            font-style: normal;
+            color: var(--primary);
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 60px;
+            padding: 40px 20px;
+            border-top: 1px solid var(--border);
+            color: var(--text);
+        }
+
+        footer p {
+            margin: 5px 0;
+        }
+
+        footer a {
+            color: var(--primary);
+            text-decoration: none;
+            transition: color 0.2s ease;
+        }
+
+        footer a:hover, footer a:focus {
+            color: var(--primary-hover);
+            text-decoration: underline;
+        }
+
+        .footer-note {
+            opacity: 0.6;
+            font-size: 0.8rem;
+            margin-top: 20px;
+        }
+
+        ul, ol {
+            padding-left: 1.5rem;
+        }
+
+        li {
+            margin-bottom: 0.5rem;
+        }
+
+        strong {
+            color: #fff;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Structure Builder Pro <small>v2.0</small></h1>
+        <p>Guia de Operação e Atalhos Técnicos</p>
+    </header>
+
+    <section class="card">
+        <h2>O que é o Structure Builder Pro?</h2>
+        <p>O <strong>Structure Builder Pro</strong> é uma ferramenta avançada de arquitetura de diretórios, projetada para automatizar a criação e gestão de estruturas complexas de pastas no Windows. Ele atua como um "arquiteto de sistemas de arquivos", permitindo que você projete visualmente como seus projetos devem ser organizados antes de aplicar as mudanças fisicamente.</p>
+        
+        <h3>Por que usar esta aplicação?</h3>
+        <ul>
+            <li><strong>Padronização Instantânea:</strong> Garante que todos os seus projetos sigam a mesma hierarquia, eliminando a bagunça e facilitando a localização de arquivos.</li>
+            <li><strong>Agilidade Extrema:</strong> O que levaria minutos para ser criado manualmente (pasta por pasta) é resolvido em segundos através de modelos pré-definidos.</li>
+            <li><strong>Organização Inteligente:</strong> Ideal para fotógrafos, engenheiros, desenvolvedores e gestores que lidam com fluxos de trabalho repetitivos e precisam de uma base sólida para seus documentos.</li>
+            <li><strong>Segurança Operacional:</strong> Evita erros comuns de digitação ou criação de pastas em locais errados, sanitizando nomes e validando caminhos automaticamente.</li>
+        </ul>
+
+        <h3>Diferenciais em relação ao Windows Explorer nativo</h3>
+        <ul>
+            <li><strong>Criação em Massa:</strong> No Explorer, você cria uma pasta por vez. Aqui, você projeta centenas de pastas visualmente e as gera com um único clique.</li>
+            <li><strong>Modelos Reutilizáveis:</strong> O Explorer não possui "memória" de estruturas. No Structure Builder, você salva seus padrões favoritos e os replica instantaneamente em novos projetos.</li>
+            <li><strong>Prevenção de Erros:</strong> Nossa ferramenta sanitiza os nomes preventivamente, garantindo que nenhum caractere proibido ou caminho inválido interrompa seu fluxo de trabalho.</li>
+            <li><strong>Visão Macro (Diagramas):</strong> Oferecemos um mapa visual (Diagrama) da sua arquitetura, algo que a visão de lista do Windows não consegue proporcionar para planejamento de grandes projetos.</li>
+        </ul>
+    </section>
+
+    <section class="card">
+        <h2>1. Fluxo de Trabalho Principal</h2>
+        <ol>
+            <li><strong>Diretório Base:</strong> Clique em "Selecionar" para escolher onde suas pastas serão criadas (Ex: <code>C:\MeusProjetos</code>).</li>
+            <li><strong>Pasta Destino:</strong> Digite o nome da pasta principal e pressione <code>Enter</code> ou clique no ícone de check.
+                <br><em>A pasta aparecerá automaticamente na árvore como raiz.</em></li>
+            <li><strong>Construção:</strong> Use o botão direito na árvore para criar subpastas ou arraste um <strong>Modelo Rápido</strong>.</li>
+            <li><strong>Finalização:</strong> Clique em <strong>Criar e Finalizar</strong> para gerar as pastas fisicamente no Windows.</li>
+        </ol>
+    </section>
+
+    <section class="card">
+        <span class="badge badge-new">Novidade</span>
+        <h2>2. Visualização e Diagramas</h2>
+        <p>O botão <strong>Diagrama</strong> gera instantaneamente um mapa visual de blocos da sua estrutura:</p>
+        <ul>
+            <li><strong>Mapeamento:</strong> Diferencia visualmente a pasta raiz das subpastas.</li>
+            <li><strong>Exportação:</strong> Permite baixar o diagrama em formato <code>.SVG</code> de alta qualidade.</li>
+            <li><strong>Temas:</strong> O diagrama adapta-se automaticamente ao modo Claro ou Escuro.</li>
+        </ul>
+    </section>
+
+    <section class="card">
+        <h2>3. Atalhos de Teclado</h2>
+        <p>A interface possui dicas visuais nos menus de contexto, mas você também pode usar o teclado para ser mais rápido:</p>
+        <div class="shortcut-grid">
+            <div class="shortcut-item"><code>F2</code> <br>Renomear pasta ou modelo selecionado.</div>
+            <div class="shortcut-item"><code>Delete</code> <br>Remover pasta ou modelo (com confirmação).</div>
+            <div class="shortcut-item"><code>Ctrl + N</code> <br>Criar uma nova pasta dentro da selecionada.</div>
+            <div class="shortcut-item"><code>Enter</code> <br>Confirmar renomeação ou pasta principal.</div>
+            <div class="shortcut-item"><code>Esc</code> <br>Fechar menus de contexto ou diagrama.</div>
+        </div>
+    </section>
+
+    <section class="card">
+        <h2 class="flex-title"><i>🔌</i> Importância de Salvar Estruturas (Pen Drive)</h2>
+        <p>O botão com o ícone de <strong>Pen Drive (USB)</strong> na barra lateral é a sua ferramenta de segurança máxima e organização de longo prazo:</p>
+        <ul>
+            <li><strong>Portabilidade:</strong> Ao salvar como arquivo <code>.json</code>, você cria um backup físico da sua estrutura. Se você formatar o computador ou mudar de empresa, seus designs de pastas estarão salvos em seu HD, nuvem ou pendrive real.</li>
+            <li><strong>Biblioteca Ilimitada:</strong> A lista de "Modelos Rápidos" no centro é para o uso diário (limite de 10). Usando o botão de Salvar, você pode criar centenas de modelos diferentes organizados em pastas no seu computador.</li>
+            <li><strong>Compartilhamento:</strong> Envie o arquivo gerado para colegas de equipe. Eles poderão carregar sua estrutura exata no Structure Builder Pro deles, padronizando a organização da empresa.</li>
+            <li><strong>Restauração Ágil:</strong> Use o botão <strong>Restaurar Modelos</strong> para carregar bibliotecas inteiras de uma só vez, recuperando todo o seu ecossistema de trabalho em segundos.</li>
+        </ul>
+    </section>
+
+    <section class="card">
+        <h2>5. Notas Técnicas</h2>
+        <ul>
+            <li><strong>Ordenação Natural:</strong> A árvore visual organiza-se automaticamente em ordem alfanumérica, idêntica ao Windows Explorer (ex: <code>01 - Pasta</code> vem antes de <code>02 - Pasta</code>, e <code>Pasta 2</code> antes de <code>Pasta 10</code>).</li>
+            <li><strong>Persistência:</strong> O tema (Dark/Light) e os modelos são salvos automaticamente.</li>
+            <li><strong>Segurança:</strong> O programa sanitiza nomes de pastas, removendo caracteres proibidos pelo Windows (<code>/ \ : * ? " < > |</code>).</li>
+            <li><strong>Sincronização Fiel:</strong> Ao clicar em "Aplicar", o Windows Explorer é atualizado para ser um espelho exato do que você vê na tela.</li>
+        </ul>
+    </section>
+
+    <footer>
+        <p><strong>Engenheiro de Software:</strong> Edilson Monteiro Neto</p>
+        <p><strong>Última Atualização:</strong> 04 de Março de 2026</p>
+        <p><strong>Contato:</strong> <a href="mailto:edilson.monteiro@anagma.com.br">edilson.monteiro@anagma.com.br</a></p>
+        <p><strong>Anagma Contabilidade</strong> - Engenharia de Sistemas Inteligentes</p>
+        <p><a href="https://www.anagma.com.br" target="_blank" rel="noopener">www.anagma.com.br</a></p>
+        <p class="footer-note">Structure Builder Pro - Desenvolvido para máxima produtividade.</p>
+    </footer>
+</body>
+</html>

@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Structure Builder Pro</title>
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <link rel="stylesheet" href="style.css">
+    <!-- Ícones Lucide para um visual profissional -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- SweetAlert2 para diálogos premium -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@sweetalert2/theme-dark@5/dark.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <!-- Mermaid.js para Diagramas -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Barra Lateral de Ações -->
+        <aside class="sidebar">
+            <div class="logo-area">
+                <i data-lucide="folder-tree" class="logo-icon"></i>
+                <h1>Structure<span>Builder</span></h1>
+            </div>
+            
+            <nav class="actions">
+                <button id="btn-load" class="action-btn">
+                    <i data-lucide="folder-open"></i> Carregar Estrutura
+                </button>
+                <div class="separator"></div>
+                <button id="btn-create" class="action-btn primary">
+                    <i data-lucide="plus-circle"></i> Criar e Finalizar
+                </button>
+                <button id="btn-update" class="action-btn primary hidden">
+                    <i data-lucide="refresh-cw"></i> Atualizar e Finalizar
+                </button>
+                <button id="btn-apply" class="action-btn">
+                    <i data-lucide="check-square"></i> Aplicar Alterações
+                </button>
+                <div class="separator"></div>
+                <button id="btn-save-template" class="action-btn" title="Exportar estrutura atual para arquivo">
+                    <i data-lucide="usb"></i> Salvar Estrutura...
+                </button>
+                <button id="btn-backup-library" class="action-btn" title="Fazer backup de todos os Modelos Rápidos">
+                    <i data-lucide="database"></i> Backup Biblioteca
+                </button>
+                <button id="btn-restore-library" class="action-btn" title="Restaurar Modelos Rápidos de um arquivo">
+                    <i data-lucide="upload-cloud"></i> Restaurar Modelos
+                </button>
+                <button id="btn-manual" class="action-btn">
+                    <i data-lucide="book-open"></i> Manual
+                </button>
+                <button id="btn-clear" class="action-btn danger">
+                    <i data-lucide="trash-2"></i> Limpar / Novo
+                </button>
+            </nav>
+
+            <div class="sidebar-logo-container">
+                <img src="logo/Anagma - Marca (cor branca).png" class="logo-light" alt="Logo Anagma Light">
+                <img src="logo/Anagma - Marca original (sem fundo).png" class="logo-dark" alt="Logo Anagma Dark">
+            </div>
+
+            <div class="sidebar-footer">
+                <p>Engine v2.0 - Desacoplado</p>
+            </div>
+        </aside>
+
+        <!-- Área Principal -->
+        <main class="main-content">
+            <!-- Header de Controle de Tema -->
+            <header class="top-header">
+                <button id="btn-theme-toggle" class="theme-toggle-btn" title="Alternar Modo Claro/Escuro">
+                    <i data-lucide="moon" id="theme-icon"></i>
+                </button>
+            </header>
+
+            <!-- Controles Superiores -->
+            <div class="content-wrapper">
+                <section class="top-controls card">
+                    <div class="input-group">
+                        <label><i data-lucide="map-pin"></i> Diretório Base</label>
+                        <div class="input-with-button">
+                            <input type="text" id="base-dir" placeholder="C:\Caminho\Do\Projeto" readonly>
+                            <button id="btn-select-base" title="Selecionar Pasta"><i data-lucide="search"></i></button>
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label><i data-lucide="type"></i> Pasta Destino</label>
+                        <div class="input-with-button">
+                            <input type="text" id="main-folder" placeholder="Nome da Pasta Principal">
+                            <button id="btn-confirm-main" class="success-btn" title="Confirmar Pasta Principal"><i data-lucide="check"></i></button>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Modelos Rápidos -->
+                <section class="templates-section card">
+                    <div class="section-header">
+                        <h2><i data-lucide="layout"></i> Modelos Rápidos <span>(Máx 10)</span></h2>
+                        <div class="header-actions">
+                            <button id="btn-add-template" class="small-btn success">+ Modelo</button>
+                            <button id="btn-apply-template" class="small-btn warning hidden" title="Salvar mudanças no modelo">Aplicar no Modelo</button>
+                            <button id="btn-quick-save" class="small-btn info">Salvar Como...</button>
+                        </div>
+                    </div>
+                    <div id="templates-list" class="templates-scroll">
+                        <!-- Modelos serão inseridos aqui via JS -->
+                        <div class="empty-state">Nenhum modelo carregado.</div>
+                    </div>
+                </section>
+
+                <!-- Área da Árvore -->
+                <section class="tree-section card">
+                    <div class="section-header">
+                        <h2><i data-lucide="layers"></i> Estrutura de Pastas</h2>
+                        <div class="header-actions">
+                            <button id="btn-new-folder" class="small-btn"><i data-lucide="folder-plus"></i> Nova Pasta</button>
+                            <button id="btn-diagram" class="small-btn secondary"><i data-lucide="share-2"></i> Diagrama</button>
+                        </div>
+                    </div>
+                    
+                    <!-- Campo de Renomeação em Contexto (Substitui o edit_frame fixo) -->
+                    <div id="rename-floating-bar" class="rename-bar hidden">
+                        <span>Editando:</span>
+                        <input type="text" id="rename-input" placeholder="Novo nome...">
+                        <button id="btn-confirm-rename" class="mini-btn success"><i data-lucide="check"></i></button>
+                    </div>
+
+                    <div id="tree-container" class="tree-view">
+                        <!-- Árvore de pastas dinâmica -->
+                        <div class="empty-tree-state">
+                            <i data-lucide="info"></i>
+                            <p>A estrutura está vazia. Adicione pastas ou carregue um modelo.</p>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <!-- Overlay de Carregamento / Processamento (Animação de Estado) -->
+    <div id="loader-overlay" class="overlay hidden">
+        <div class="loader-content">
+            <div class="spinner"></div>
+            <p id="loader-message">Processando estrutura...</p>
+        </div>
+    </div>
+
+    <!-- Menu de Contexto (Botão Direito) -->
+    <div id="context-menu" class="context-menu hidden">
+        <ul>
+            <li id="cm-new"><i data-lucide="folder-plus"></i> Nova Pasta <span class="shortcut-hint">Ctrl+N</span></li>
+            <li id="cm-rename"><i data-lucide="edit-3"></i> Renomear <span class="shortcut-hint">F2</span></li>
+            <li class="separator-menu"></li>
+            <li id="cm-delete" class="danger-text"><i data-lucide="trash-2"></i> Remover <span class="shortcut-hint">Del</span></li>
+        </ul>
+    </div>
+
+    <!-- Menu de Contexto para Modelos -->
+    <div id="template-context-menu" class="context-menu hidden">
+        <ul>
+            <li id="tm-rename"><i data-lucide="edit-3"></i> Renomear Modelo <span class="shortcut-hint">F2</span></li>
+            <li id="tm-delete" class="danger-text"><i data-lucide="trash-2"></i> Remover Modelo <span class="shortcut-hint">Del</span></li>
+        </ul>
+    </div>
+
+    <!-- Modal de Diagrama -->
+    <div id="diagram-modal" class="overlay hidden">
+        <div class="modal-content card diagram-card">
+            <div class="modal-header">
+                <h2><i data-lucide="share-2"></i> Mapeamento de Estrutura</h2>
+                <button id="btn-close-diagram" class="close-btn"><i data-lucide="x"></i></button>
+            </div>
+            <div id="mermaid-container" class="mermaid-viewer">
+                <!-- Diagrama será renderizado aqui -->
+            </div>
+            <div class="modal-footer">
+                <p>O diagrama reflete a hierarquia atual em tempo real.</p>
+                <button id="btn-download-diagram" class="small-btn info">Baixar SVG</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Script do Eel -->
+    <script type="text/javascript" src="/eel.js"></script>
+    <script src="script.js"></script>
+    <script>
+        lucide.createIcons();
+    </script>
+</body>
+</html>
