@@ -100,13 +100,35 @@ function configurarEventos() {
 
     document.getElementById('btn-quick-save').onclick = async () => {
         sincronizarCamposDaTela();
+        
+        // Pergunta o nome da pasta raiz (desacoplado do modelo) para preservar o original
+        const isLight = document.body.classList.contains('light-theme');
+        const { value: customName } = await Swal.fire({
+            title: 'Nome da Pasta Raiz',
+            text: 'Como a pasta raiz deve ser chamada no Windows Explorer?',
+            input: 'text',
+            inputValue: state.mainFolder, 
+            showCancelButton: true,
+            confirmButtonColor: '#3b82f6',
+            confirmButtonText: 'Continuar',
+            cancelButtonText: 'Cancelar',
+            background: isLight ? '#ffffff' : '#1e293b',
+            color: isLight ? '#1e293b' : '#f1f5f9',
+            inputValidator: (value) => {
+                if (!value) return 'Você precisa definir um nome para a pasta!';
+            }
+        });
+
+        if (!customName) return;
+
         const target = await eel.selecionar_pasta("Onde criar?")();
         if (target) {
             mostrarLoader("Criando...");
-            const res = await eel.sincronizar_no_windows(target, state.mainFolder, state.tree, null, false)();
+            // Utilizamos o nome customizado no parâmetro main_folder da sincronização
+            const res = await eel.sincronizar_no_windows(target, customName.trim(), state.tree, null, false)();
             esconderLoader();
             if (res.error) alertar("Erro", res.error, 'error');
-            else alertar("Sucesso", `Criado em: ${res.path}`, 'success');
+            else alertar("Sucesso", `Estrutura criada com sucesso em: ${res.path}`, 'success');
         }
     };
 
@@ -310,6 +332,7 @@ function aplicarDadosAoEstado(dados) {
     if (dados.tree_structure) {
         state.tree = prepararArvoreRecursiva(dados.tree_structure);
         state.tree.id = "root"; // Garante ID da raiz
+        state.tree.isExpanded = true; // Garante que a raiz sempre inicie expandida para visualização
     }
     renderizarArvore();
 }
@@ -318,7 +341,8 @@ function prepararArvoreRecursiva(node) {
     const newNode = {
         id: node.id || "id_" + Math.random().toString(36).substr(2, 9),
         name: node.name,
-        isExpanded: node.isExpanded !== undefined ? node.isExpanded : true,
+        // Engenharia Sênior: Alterado o fallback de true para false para iniciar recolhido
+        isExpanded: node.isExpanded !== undefined ? node.isExpanded : false,
         children: (node.children || []).map(c => prepararArvoreRecursiva(c))
     };
 

@@ -14,7 +14,8 @@ O **Structure Builder** não é apenas um criador de pastas; é um ecossistema d
 *   **🧠 Memória de Elefante**: Salve até 10 modelos favoritos na barra de acesso rápido. Eles ficam guardados mesmo depois de fechar o programa.
 *   **🛠️ Editor de Árvore Dinâmico**: Adicione, remova e renomear pastas em uma interface visual fluida antes de criá-las de verdade.
 *   **🔄 Modo de Atualização**: Carregue uma pasta que já existe, faça as alterações na interface e o software aplica as mudanças (renomeia e deleta) direto no disco.
-*   **🌐 Salvar Como (Quick Deploy)**: Escolha qualquer unidade ou local do Windows na hora para "despejar" sua estrutura pronta.
+*   **🌐 Salvar Como (Quick Deploy)**: Escolha qualquer unidade ou local do Windows na hora para "despejar" sua estrutura. Agora permite definir um nome personalizado para a pasta raiz no momento da criação, preservando o nome original do seu modelo.
+*   **📂 Visualização Limpa**: A árvore de pastas agora inicia recolhida por padrão (exceto a pasta raiz), facilitando a navegação em estruturas complexas e mantendo o foco no que importa.
 
 ---
 
