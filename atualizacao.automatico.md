@@ -94,5 +94,6 @@
    * Criar script auxiliar 'updater.exe' para gerenciar o fechamento do app principal e execução do instalador.
    * Criar a possibilidade de troubleshooting caso a atualização não tenha funcionando adequadamente. 
    * Testar fluxo completo de download -> substituição -> reinicialização.
+   * Após atualização bem sucedida exibir uma caixa informando melhorias na aplicação mas não falando dos arquivos .py , e sim as melhorias que quando o usuário ler entenda, por exemplo: "ealizado atualização em modelos rápidos para não alterar o nome do modelo ou como adicionado nova função" como disse são exemplos para qualquer atualização. O manual será atualizado automaticamente e caixa que abrir terá a opção de ler manual ou fechar a caixa de diálogo.
 
   O que acha de começarmos a estruturar o módulo de Versão no futuro para testar essa comunicação com o GitHub? não altere o código ainda e entenda o projeto após ler.
