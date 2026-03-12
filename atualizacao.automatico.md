@@ -16,6 +16,8 @@
        
    * Tipos de Licença: Implementar suporte a licenças por Assinatura mensal ou anual e Trial de 15 dias para teste, sendo que por assinatura com a possibilidade de travar o uso sem permissão do usuário, quando o usuário for desbloquear aparecerá uma mensagem informando a renovação mensal, mas antes do bloqueio infromar por e-mail automático.
 
+   Ter uma única licença Master que pode ser usada abertamente mas que possa ser alterada quando for percebido que não existe autorização de uso.
+
 
   Fluxo Técnico:
    1. Usuário insere a chave.
@@ -97,3 +99,9 @@
    * Após atualização bem sucedida exibir uma caixa informando melhorias na aplicação mas não falando dos arquivos .py , e sim as melhorias que quando o usuário ler entenda, por exemplo: "ealizado atualização em modelos rápidos para não alterar o nome do modelo ou como adicionado nova função" como disse são exemplos para qualquer atualização. O manual será atualizado automaticamente e caixa que abrir terá a opção de ler manual ou fechar a caixa de diálogo.
 
   O que acha de começarmos a estruturar o módulo de Versão no futuro para testar essa comunicação com o GitHub? não altere o código ainda e entenda o projeto após ler.
+
+  Este projeto vejo a necessidade de criar um painel para visualizar licenças ativas e isso será um novo projeto que pode ser feito em paralelo no caminho do projeto C:\Users\edilson.monteiro\Documents\projetos\Painel_Licenças
+
+  Para o projeto e Estrutura de árvores deve ser implementado a atualização automática que servirá para outros projetos.
+
+  NÃO ALTERE  NENHUM CÓDIGO 

@@ -28,6 +28,9 @@
                 <button id="btn-load" class="action-btn">
                     <i data-lucide="folder-open"></i> Carregar Estrutura
                 </button>
+                <button id="btn-mirroring-menu" class="action-btn">
+                    <i data-lucide="copy"></i> Espelhamento de Pastas
+                </button>
                 <div class="separator"></div>
                 <button id="btn-create" class="action-btn primary">
                     <i data-lucide="plus-circle"></i> Criar e Finalizar
@@ -75,8 +78,8 @@
                 </button>
             </header>
 
-            <!-- Controles Superiores -->
-            <div class="content-wrapper">
+            <!-- Menu Principal (Criação de Pastas) -->
+            <div id="main-menu-section" class="content-wrapper">
                 <section class="top-controls card">
                     <div class="section-header">
                         <h2><i data-lucide="folder-plus"></i> Criar nova estrutura de Pastas</h2>
@@ -97,7 +100,6 @@
                     </div>
                 </section>
 
-                <!-- Modelos Rápidos -->
                 <section class="templates-section card">
                     <div class="section-header">
                         <h2><i data-lucide="layout"></i> Modelos Rápidos <span>(Máx 10)</span></h2>
@@ -108,12 +110,10 @@
                         </div>
                     </div>
                     <div id="templates-list" class="templates-scroll">
-                        <!-- Modelos serão inseridos aqui via JS -->
                         <div class="empty-state">Nenhum modelo carregado.</div>
                     </div>
                 </section>
 
-                <!-- Área da Árvore -->
                 <section class="tree-section card">
                     <div class="section-header">
                         <h2><i data-lucide="layers"></i> Estrutura de Pastas</h2>
@@ -122,16 +122,12 @@
                             <button id="btn-diagram" class="small-btn secondary"><i data-lucide="share-2"></i> Diagrama</button>
                         </div>
                     </div>
-                    
-                    <!-- Campo de Renomeação em Contexto (Substitui o edit_frame fixo) -->
                     <div id="rename-floating-bar" class="rename-bar hidden">
                         <span>Editando:</span>
                         <input type="text" id="rename-input" placeholder="Novo nome...">
                         <button id="btn-confirm-rename" class="mini-btn success"><i data-lucide="check"></i></button>
                     </div>
-
                     <div id="tree-container" class="tree-view">
-                        <!-- Árvore de pastas dinâmica -->
                         <div class="empty-tree-state">
                             <i data-lucide="info"></i>
                             <p>A estrutura está vazia. Adicione pastas ou carregue um modelo.</p>
@@ -139,57 +135,102 @@
                     </div>
                 </section>
             </div>
+
+            <!-- SEÇÃO DE ESPELHAMENTO (TOTALMENTE RECUPERADA E ISOLADA) -->
+            <div id="mirroring-section" class="content-wrapper hidden">
+                <div class="mirroring-container">
+                    <div class="navigation-header">
+                        <button id="btn-back-to-main" class="nav-btn-back">
+                            <i data-lucide="arrow-left-circle"></i> Voltar
+                        </button>
+                        <div id="mirror-last-update-container" class="last-update-container hidden">
+                            <i data-lucide="clock"></i> Sincronizado em: <span id="mirror-last-update-date">--</span>
+                        </div>
+                        <div class="header-actions">
+                            <button class="small-btn info" id="btn-mirror-load"><i data-lucide="download"></i> Carregar Estrutura</button>
+                            <button class="small-btn secondary" id="btn-mirror-clear"><i data-lucide="trash-2"></i> Limpar Tela</button>
+                            <button class="action-btn primary small-btn" id="btn-mirror-apply"><i data-lucide="check-circle"></i> Aplicar Espelhamento</button>
+                        </div>
+                    </div>
+
+                    <div class="mirror-grid">
+                        <div class="mirror-column" id="mirror-panel-left">
+                            <div class="section-header">
+                                <h2><i data-lucide="edit-3"></i> Estrutura para Espelhar</h2>
+                            </div>
+                            <div id="mirror-tree-editable" class="mirror-tree">
+                                <!-- Conteúdo injetado via JS -->
+                            </div>
+                        </div>
+
+                        <div class="mirror-divider"><i data-lucide="arrow-right-left"></i></div>
+
+                        <div class="mirror-column readonly" id="mirror-panel-right">
+                            <div class="section-header">
+                                <h2><i data-lucide="refresh-cw"></i> Modelo Atualizado</h2>
+                            </div>
+                            <div id="mirror-tree-synced" class="mirror-tree">
+                                <!-- Conteúdo injetado via JS -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="resize-handle">
+                        <i data-lucide="grip-horizontal"></i> Redimensionar Verticalmente
+                    </div>
+                </div>
+            </div>
         </main>
     </div>
 
-    <!-- Overlay de Carregamento / Processamento (Animação de Estado) -->
+    <!-- Menus de Contexto e Overlays -->
+    <div id="mirror-context-menu" class="context-menu hidden">
+        <ul>
+            <li id="mcm-new"><i data-lucide="folder-plus"></i> Nova Pasta</li>
+            <li id="mcm-rename"><i data-lucide="type"></i> Renomear (F2)</li>
+            <li class="separator-menu"></li>
+            <li id="mcm-delete" class="danger-text"><i data-lucide="trash-2"></i> Remover (Del)</li>
+        </ul>
+    </div>
+
     <div id="loader-overlay" class="overlay hidden">
         <div class="loader-content">
             <div class="spinner"></div>
-            <p id="loader-message">Processando estrutura...</p>
+            <p id="loader-message">Processando...</p>
         </div>
     </div>
 
-    <!-- Menu de Contexto (Botão Direito) -->
     <div id="context-menu" class="context-menu hidden">
         <ul>
-            <li id="cm-new"><i data-lucide="folder-plus"></i> Nova Pasta <span class="shortcut-hint">Ctrl+N</span></li>
-            <li id="cm-rename"><i data-lucide="edit-3"></i> Renomear <span class="shortcut-hint">F2</span></li>
+            <li id="cm-new"><i data-lucide="folder-plus"></i> Nova Pasta</li>
+            <li id="cm-rename"><i data-lucide="edit-3"></i> Renomear</li>
             <li class="separator-menu"></li>
-            <li id="cm-delete" class="danger-text"><i data-lucide="trash-2"></i> Remover <span class="shortcut-hint">Del</span></li>
+            <li id="cm-delete" class="danger-text"><i data-lucide="trash-2"></i> Remover</li>
         </ul>
     </div>
 
-    <!-- Menu de Contexto para Modelos -->
     <div id="template-context-menu" class="context-menu hidden">
         <ul>
-            <li id="tm-rename"><i data-lucide="edit-3"></i> Renomear Modelo <span class="shortcut-hint">F2</span></li>
-            <li id="tm-delete" class="danger-text"><i data-lucide="trash-2"></i> Remover Modelo <span class="shortcut-hint">Del</span></li>
+            <li id="tm-rename"><i data-lucide="edit-3"></i> Renomear Modelo</li>
+            <li id="tm-delete" class="danger-text"><i data-lucide="trash-2"></i> Remover Modelo</li>
         </ul>
     </div>
 
-    <!-- Modal de Diagrama -->
     <div id="diagram-modal" class="overlay hidden">
         <div class="modal-content card diagram-card">
             <div class="modal-header">
                 <h2><i data-lucide="share-2"></i> Mapeamento de Estrutura</h2>
                 <button id="btn-close-diagram" class="close-btn"><i data-lucide="x"></i></button>
             </div>
-            <div id="mermaid-container" class="mermaid-viewer">
-                <!-- Diagrama será renderizado aqui -->
-            </div>
+            <div id="mermaid-container" class="mermaid-viewer"></div>
             <div class="modal-footer">
-                <p>O diagrama reflete a hierarquia atual em tempo real.</p>
                 <button id="btn-download-diagram" class="small-btn info">Baixar SVG</button>
             </div>
         </div>
     </div>
 
-    <!-- Script do Eel -->
     <script type="text/javascript" src="/eel.js"></script>
     <script src="script.js"></script>
-    <script>
-        lucide.createIcons();
-    </script>
+    <script>lucide.createIcons();</script>
 </body>
 </html>

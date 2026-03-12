@@ -203,9 +203,54 @@ def sincronizar_no_windows(base_dir, main_folder, tree_data, original_state=None
         return {"error": str(e)}
 
 @eel.expose
-def carregar_estrutura_existente(caminho):
+def aplicar_espelhamento(base_path, tree_data):
     try:
-        return engine.load_existing_structure(caminho)
+        return engine.sync_mirroring(base_path, tree_data)
+    except Exception as e:
+        return {"error": str(e)}
+
+@eel.expose
+def salvar_copia_estrutura(source, target):
+    try:
+        res = engine.perform_copy(source, target)
+        return True if res == True else {"error": res}
+    except Exception as e:
+        return {"error": str(e)}
+
+@eel.expose
+def deletar_estrutura_fisica(path):
+    try:
+        res = engine.perform_delete_physical(path)
+        return True if res == True else {"error": res}
+    except Exception as e:
+        return {"error": str(e)}
+
+@eel.expose
+def salvar_estado_espelhamento(data):
+    return engine.save_session_state(data)
+
+@eel.expose
+def carregar_estado_espelhamento():
+    return engine.load_session_state()
+
+@eel.expose
+def encerrar_programa():
+    """Fecha a aplicação de forma limpa após confirmar com o frontend."""
+    import threading
+    import time
+
+    def matar_processo():
+        time.sleep(0.3) # Delay para o JS receber a resposta
+        print("Processo encerrado com sucesso.")
+        os._exit(0)
+
+    threading.Thread(target=matar_processo).start()
+    return True
+
+@eel.expose
+def carregar_estrutura_existente(caminho, incluir_arquivos=False):
+    try:
+        return engine.load_existing_structure(caminho, incluir_arquivos)
     except Exception as e:
         return {"error": str(e)}
 

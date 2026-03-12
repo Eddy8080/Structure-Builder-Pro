@@ -146,9 +146,12 @@ cython_debug/
 # VS Code
 .vscode/
 
-# Project Specific Data (Templates and Tests)
+# Project Specific Data (Templates, Sessions and Tests)
 quick_templates.json
+mirror_session.json
 TESTE_AUTOMATICO_MOTOR/
+TESTE_REPRODUCAO_ESPELHAMENTO/
+TESTE_VALIDACAO_ESPELHAMENTO/
 TesteParaUpdate/
 
 # OS Specific
@@ -159,4 +162,4 @@ Desktop.ini
 
 # Project Specific Build Artifacts
 output_installer/
-atualizacao_automatico.md
+atualizacao.automatico.md

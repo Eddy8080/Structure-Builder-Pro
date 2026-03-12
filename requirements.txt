@@ -1,10 +1,9 @@
+# Core Dependencies (Application)
 Eel==0.18.2
-customtkinter==5.2.2
 gevent==25.9.1
 gevent-websocket==0.10.1
 bottle==0.13.4
 bottle-websocket==0.2.9
-darkdetect==0.8.0
 future==1.0.0
 greenlet==3.3.2
 packaging==26.0
@@ -12,3 +11,10 @@ pyparsing==3.3.2
 typing_extensions==4.15.0
 zope.event==6.1
 zope.interface==8.2
+
+# Build Dependencies (Packaging)
+pyinstaller==6.19.0
+pyinstaller-hooks-contrib==2026.2
+altgraph==0.17.5
+pefile==2024.8.26
+pywin32-ctypes==0.2.3
