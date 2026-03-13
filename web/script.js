@@ -1,5 +1,5 @@
 /**
- * Script Principal de Interface v5.2 - Backup e Restauração
+ * Script Principal de Interface v5.3 - Registry-Based Workspace
  */
 
 let state = {
@@ -20,6 +20,7 @@ document.addEventListener('DOMContentLoaded', () => {
     configurarMenuContexto();
     inicializarTema();
     restaurarMirroringState();
+    configurarEventosMirror(); 
 });
 
 function sincronizarCamposDaTela() {
@@ -33,18 +34,23 @@ function sincronizarCamposDaTela() {
 function inicializarTema() {
     const theme = localStorage.getItem('app-theme') || 'dark';
     if (theme === 'light') { document.body.classList.add('light-theme'); atualizarIconeTema('sun'); }
-    document.getElementById('btn-theme-toggle').onclick = () => {
-        const isLight = document.body.classList.toggle('light-theme');
-        localStorage.setItem('app-theme', isLight ? 'light' : 'dark');
-        atualizarIconeTema(isLight ? 'sun' : 'moon');
-        Swal.update({ background: isLight ? '#ffffff' : '#1e293b', color: isLight ? '#1e293b' : '#f1f5f9' });
-    };
+    const btn = document.getElementById('btn-theme-toggle');
+    if (btn) {
+        btn.onclick = () => {
+            const isLight = document.body.classList.toggle('light-theme');
+            localStorage.setItem('app-theme', isLight ? 'light' : 'dark');
+            atualizarIconeTema(isLight ? 'sun' : 'moon');
+            Swal.update({ background: isLight ? '#ffffff' : '#1e293b', color: isLight ? '#1e293b' : '#f1f5f9' });
+        };
+    }
 }
 
 function atualizarIconeTema(iconName) {
     const icon = document.getElementById('theme-icon');
-    icon.setAttribute('data-lucide', iconName);
-    lucide.createIcons();
+    if (icon) {
+        icon.setAttribute('data-lucide', iconName);
+        lucide.createIcons();
+    }
 }
 
 const Toast = Swal.mixin({ toast: true, position: 'top-end', showConfirmButton: false, timer: 3000 });
@@ -202,7 +208,6 @@ function configurarAtalhos() {
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') document.querySelectorAll('.context-menu, .overlay, .rename-bar, .context-menu').forEach(el => el.classList.add('hidden'));
         
-        // Atalhos para o modo de Espelhamento
         if (mirroringState.isMirrorMode && mirroringState.selectedIds.length > 0) {
             if (e.key === 'F2') { e.preventDefault(); iniciarRenomeacaoMirror(); }
             if (e.key === 'Delete') { e.preventDefault(); removerPastaMirror(); }
@@ -253,6 +258,7 @@ function removerPasta(id) {
 
 function renderizarArvore() {
     const container = document.getElementById('tree-container');
+    if (!container) return;
     container.innerHTML = '';
     if (!state.tree) { container.innerHTML = '<div class="empty-tree-state"><p>Estrutura vazia.</p></div>'; return; }
     const montarHTML = (node, isRoot = false) => {
@@ -296,9 +302,12 @@ function prepararArvoreRecursiva(node) {
 }
 function atualizarUIModo(isUpdate) {
     const editMode = isUpdate || state.isEditingTemplate;
-    document.getElementById('btn-create').classList.toggle('hidden', editMode);
-    document.getElementById('btn-update').classList.toggle('hidden', !editMode);
-    document.getElementById('btn-apply-template').classList.toggle('hidden', !state.isEditingTemplate);
+    const btnCreate = document.getElementById('btn-create');
+    const btnUpdate = document.getElementById('btn-update');
+    const btnTemplate = document.getElementById('btn-apply-template');
+    if (btnCreate) btnCreate.classList.toggle('hidden', editMode);
+    if (btnUpdate) btnUpdate.classList.toggle('hidden', !editMode);
+    if (btnTemplate) btnTemplate.classList.toggle('hidden', !state.isEditingTemplate);
 }
 function resetarUI() {
     state = { baseDir: "", mainFolder: "", tree: null, selectedId: null, selectedTemplateIdx: null, originalState: null, isExistingStructure: false, isEditingTemplate: false };
@@ -307,20 +316,24 @@ function resetarUI() {
 }
 function iniciarRenomeacao() {
     const bar = document.getElementById('rename-floating-bar'); const input = document.getElementById('rename-input'); const node = buscarNode(state.tree, state.selectedId);
-    if (node) { renamingTargetId = node.id; bar.classList.remove('hidden'); input.value = node.name; setTimeout(() => { input.focus(); input.select(); }, 10); }
-    document.getElementById('btn-confirm-rename').onclick = confirmarRenomeacao;
+    if (node && bar && input) { renamingTargetId = node.id; bar.classList.remove('hidden'); input.value = node.name; setTimeout(() => { input.focus(); input.select(); }, 10); }
+    const btnConfirm = document.getElementById('btn-confirm-rename');
+    if (btnConfirm) btnConfirm.onclick = confirmarRenomeacao;
 }
 function confirmarRenomeacao() {
-    const input = document.getElementById('rename-input'); const novoNome = input.value.trim();
+    const input = document.getElementById('rename-input'); const novoNome = input ? input.value.trim() : "";
     if (renamingTargetId && novoNome !== "") {
         const node = buscarNode(state.tree, renamingTargetId);
         if (node) { node.name = novoNome; if (node.id === "root") { state.mainFolder = node.name; document.getElementById('main-folder').value = node.name; } }
     }
-    renamingTargetId = null; document.getElementById('rename-floating-bar').classList.add('hidden'); renderizarArvore();
+    renamingTargetId = null; 
+    const bar = document.getElementById('rename-floating-bar');
+    if (bar) bar.classList.add('hidden'); 
+    renderizarArvore();
 }
 function selecionarItem(id) { state.selectedId = id; renderizarArvore(); }
 async function carregarModelos() {
-    const modelos = await eel.obter_modelos_rapidos()(); const list = document.getElementById('templates-list'); list.innerHTML = '';
+    const modelos = await eel.obter_modelos_rapidos()(); const list = document.getElementById('templates-list'); if (!list) return; list.innerHTML = '';
     modelos.forEach((m, idx) => {
         const item = document.createElement('div'); item.className = 'template-item'; if (state.selectedTemplateIdx === idx) item.classList.add('selected');
         item.innerHTML = `<i data-lucide="folder"></i> <span>${m.main_folder}</span>`;
@@ -331,7 +344,8 @@ async function carregarModelos() {
     lucide.createIcons();
 }
 function mostrarMenuModelo(e, index) {
-    const menu = document.getElementById('template-context-menu'); menu.style.top = `${e.clientY}px`; menu.style.left = `${e.clientX}px`; menu.classList.remove('hidden');
+    const menu = document.getElementById('template-context-menu'); if (!menu) return;
+    menu.style.top = `${e.clientY}px`; menu.style.left = `${e.clientX}px`; menu.classList.remove('hidden');
     document.getElementById('tm-rename').onclick = () => renomearModeloInterface(index); document.getElementById('tm-delete').onclick = () => removerModeloInterface(index);
 }
 async function renomearModeloInterface(index) {
@@ -348,20 +362,26 @@ function aplicarModelo(modelo) { aplicarDadosAoEstado(modelo); }
 function configurarMenuContexto() {
     const menu = document.getElementById('context-menu');
     const treeContainer = document.getElementById('tree-container');
-    if (treeContainer) {
+    if (treeContainer && menu) {
         treeContainer.oncontextmenu = (e) => {
             e.preventDefault(); const itemElement = e.target.closest('.tree-item-content');
             if (itemElement) selecionarItem(itemElement.dataset.id); else { state.selectedId = null; renderizarArvore(); }
             menu.style.top = `${e.clientY}px`; menu.style.left = `${e.clientX}px`; menu.classList.remove('hidden');
         };
     }
-    document.getElementById('cm-new').onclick = () => criarNovaPasta(); document.getElementById('cm-rename').onclick = () => iniciarRenomeacao(); document.getElementById('cm-delete').onclick = () => removerPasta(state.selectedId);
+    const btnNew = document.getElementById('cm-new');
+    const btnRen = document.getElementById('cm-rename');
+    const btnDel = document.getElementById('cm-delete');
+    if (btnNew) btnNew.onclick = () => criarNovaPasta(); 
+    if (btnRen) btnRen.onclick = () => iniciarRenomeacao(); 
+    if (btnDel) btnDel.onclick = () => removerPasta(state.selectedId);
 }
-function mostrarLoader(msg) { document.getElementById('loader-message').innerText = msg; document.getElementById('loader-overlay').classList.remove('hidden'); }
-function esconderLoader() { document.getElementById('loader-overlay').classList.add('hidden'); }
+function mostrarLoader(msg) { const ov = document.getElementById('loader-overlay'); const m = document.getElementById('loader-message'); if (ov && m) { m.innerText = msg; ov.classList.remove('hidden'); } }
+function esconderLoader() { const ov = document.getElementById('loader-overlay'); if (ov) ov.classList.add('hidden'); }
 async function gerarDiagrama() {
     if (!state.tree) return;
     const modal = document.getElementById('diagram-modal'); const container = document.getElementById('mermaid-container');
+    if (!modal || !container) return;
     modal.classList.remove('hidden'); container.innerHTML = '<div class="spinner"></div>';
     mermaid.initialize({ startOnLoad: false, theme: document.body.classList.contains('light-theme') ? 'default' : 'dark', securityLevel: 'loose' });
     let mermaidText = "graph LR\n"; mermaidText += "classDef root fill:#3b82f6,stroke:#2563eb,color:#fff,stroke-width:2px;\n"; mermaidText += "classDef folder fill:#1e293b,stroke:#3b82f6,color:#f1f5f9;\n";
@@ -379,12 +399,13 @@ function baixarDiagramaSvg() {
     downloadLink.download = `${state.mainFolder || 'estrutura'}_diagrama.svg`; document.body.appendChild(downloadLink); downloadLink.click(); document.body.removeChild(downloadLink);
 }
 
-// --- MÓDULO DE ESPELHAMENTO RECUPERADO (INTEGRIDADE TOTAL) ---
+// --- MÓDULO DE ESPELHAMENTO (MULTIPLE SNAPSHOT REGISTRY) ---
 
 const mirroringState = { 
     basePath: "", editableTree: null, syncedTree: null, 
     selectedIds: [], draggedIds: [], isMirrorMode: false,
-    lastUpdate: null, history: {} 
+    lastUpdate: null, history: {},
+    pinnedSnapshots: {} 
 };
 
 function configurarEventosMirror() {
@@ -392,18 +413,17 @@ function configurarEventosMirror() {
     if (btnMenu) btnMenu.onclick = () => {
         mirroringState.isMirrorMode = true;
         document.getElementById('mirroring-section').classList.remove('hidden');
-        document.getElementById('main-menu-section').classList.add('hidden'); // Oculta o menu principal
+        document.getElementById('main-menu-section').classList.add('hidden');
         btnMenu.classList.add('active');
         if (mirroringState.editableTree) renderizarArvoresEspelhamento();
-        
-        // Reativa o motor de redimensionamento ao entrar no menu
+        atualizarVisibilidadeBotaoRecall();
         setTimeout(inicializarResizerUnificado, 100);
     };
     const btnBack = document.getElementById('btn-back-to-main');
     if (btnBack) btnBack.onclick = () => {
         mirroringState.isMirrorMode = false;
         document.getElementById('mirroring-section').classList.add('hidden');
-        document.querySelector('.content-wrapper:not(#mirroring-section)').classList.remove('hidden');
+        document.getElementById('main-menu-section').classList.remove('hidden');
         document.getElementById('btn-mirroring-menu').classList.remove('active');
     };
     document.getElementById('btn-mirror-load').onclick = async () => {
@@ -417,15 +437,17 @@ function configurarEventosMirror() {
                 if (mirroringState.history[path]) { mirroringState.editableTree = mirroringState.history[path].tree; mirroringState.lastUpdate = mirroringState.history[path].lastUpdate; }
                 else { mirroringState.editableTree = prepararArvoreEspelhamento(dados.tree_structure, true); mirroringState.lastUpdate = null; }
                 atualizarLabelData(mirroringState.lastUpdate); mirroringState.syncedTree = JSON.parse(JSON.stringify(mirroringState.editableTree));
+                atualizarVisibilidadeBotaoRecall();
                 renderizarArvoresEspelhamento(); persistirMirroringState();
             } catch (err) { alertar("Erro", "Falha ao carregar."); } finally { esconderLoader(); }
         }
     };
+    document.getElementById('btn-mirror-remember').onclick = salvarLembrancaMirror;
+    document.getElementById('btn-mirror-recall').onclick = restaurarLembrancaMirror;
     document.getElementById('btn-mirror-apply').onclick = async () => {
         if (!mirroringState.editableTree) return;
         mostrarLoader("Sincronizando...");
         try {
-            // Engenharia Sênior: Chamada para escrita física no Windows Explorer
             const res = await eel.aplicar_espelhamento(mirroringState.basePath, mirroringState.editableTree)();
             if (res.error) alertar("Erro", res.error, 'error');
             else {
@@ -446,29 +468,112 @@ function configurarEventosMirror() {
         finally { esconderLoader(); }
     };
     document.getElementById('btn-mirror-clear').onclick = () => {
-        // Engenharia Sênior: Reset Total da Sessão Ativa
-        mirroringState.basePath = ""; 
-        mirroringState.editableTree = null; 
-        mirroringState.syncedTree = null; 
-        mirroringState.lastUpdate = null; 
-        mirroringState.history = {}; // Limpa o histórico da sessão atual
-        
+        mirroringState.basePath = ""; mirroringState.editableTree = null; mirroringState.syncedTree = null; mirroringState.lastUpdate = null;
         atualizarLabelData(null);
-        document.getElementById('mirror-tree-editable').innerHTML = ''; 
-        document.getElementById('mirror-tree-synced').innerHTML = ''; 
-        
-        // Informa ao Python para limpar o estado persistido também, se desejar um reset total
+        const t1 = document.getElementById('mirror-tree-editable');
+        const t2 = document.getElementById('mirror-tree-synced');
+        if (t1) t1.innerHTML = ''; 
+        if (t2) t2.innerHTML = ''; 
         persistirMirroringState();
     };
     const menu = document.getElementById('mirror-context-menu');
     const mirrorContainer = document.getElementById('mirror-tree-editable');
-    if (mirrorContainer) {
+    if (mirrorContainer && menu) {
         mirrorContainer.oncontextmenu = (e) => {
             e.preventDefault(); const item = e.target.closest('.tree-item-content') || e.target.closest('.file-item-mirror');
             if (item) { selecionarItemMirror(item.dataset.id); menu.style.top = `${e.clientY}px`; menu.style.left = `${e.clientX}px`; menu.classList.remove('hidden'); }
         };
     }
-    document.getElementById('mcm-new').onclick = criarNovaPastaMirror; document.getElementById('mcm-rename').onclick = iniciarRenomeacaoMirror; document.getElementById('mcm-delete').onclick = removerPastaMirror;
+    document.getElementById('mcm-new').onclick = criarNovaPastaMirror; 
+    document.getElementById('mcm-rename').onclick = iniciarRenomeacaoMirror; 
+    document.getElementById('mcm-delete').onclick = removerPastaMirror;
+}
+
+function salvarLembrancaMirror() {
+    if (!mirroringState.editableTree || !mirroringState.basePath) {
+        Toast.fire({ icon: 'warning', title: 'Nada para lembrar!' });
+        return;
+    }
+    mirroringState.pinnedSnapshots[mirroringState.basePath] = {
+        tree: JSON.parse(JSON.stringify(mirroringState.editableTree)),
+        lastUpdate: mirroringState.lastUpdate,
+        folderName: mirroringState.editableTree.name,
+        timestamp: new Date().getTime()
+    };
+    persistirMirroringState();
+    atualizarVisibilidadeBotaoRecall();
+    Toast.fire({ icon: 'success', title: 'Lembrança salva!' });
+}
+
+async function restaurarLembrancaMirror() {
+    const chaves = Object.keys(mirroringState.pinnedSnapshots);
+    if (chaves.length === 0) { Toast.fire({ icon: 'info', title: 'Nenhuma lembrança.' }); return; }
+
+    // Engenharia Sênior: Central de Gestão de Memórias (Contraste e Gestão)
+    let listHtml = `<div class="memory-management-list">`;
+    chaves.sort((a,b) => mirroringState.pinnedSnapshots[b].timestamp - mirroringState.pinnedSnapshots[a].timestamp).forEach(path => {
+        const snap = mirroringState.pinnedSnapshots[path];
+        const data = new Date(snap.timestamp).toLocaleString('pt-BR');
+        listHtml += `
+            <div class="memory-item" onclick="window.confirmarRestauracaoMemory('${path.replace(/\\/g, '/')}')">
+                <button class="delete-memory-btn" onclick="event.stopPropagation(); window.deletarMemory('${path.replace(/\\/g, '/')}')" title="Excluir Lembrança">×</button>
+                <div class="memory-info">
+                    <span class="memory-name">${snap.folderName}</span>
+                    <span class="memory-date">${data}</span>
+                </div>
+            </div>
+        `;
+    });
+    listHtml += `</div>`;
+
+    window.confirmarRestauracaoMemory = (p) => { 
+        const path = p;
+        Swal.close(); 
+        if (mirroringState.pinnedSnapshots[path]) {
+            aplicarSnapshotMirror(path, mirroringState.pinnedSnapshots[path]); 
+            Toast.fire({ icon: 'success', title: 'Projeto recuperado!' }); 
+        }
+    };
+
+    window.deletarMemory = async (p) => { 
+        const path = p;
+        if (await confirmar("Excluir", `Remover lembrança de "${mirroringState.pinnedSnapshots[path].folderName}"?`)) {
+            delete mirroringState.pinnedSnapshots[path];
+            persistirMirroringState();
+            atualizarVisibilidadeBotaoRecall();
+            Swal.close();
+            setTimeout(restaurarLembrancaMirror, 100);
+        }
+    };
+
+    await Swal.fire({
+        title: 'Recarregar Lembrança',
+        html: listHtml,
+        showConfirmButton: false,
+        showCancelButton: true,
+        cancelButtonText: 'Fechar',
+        background: document.body.classList.contains('light-theme') ? '#ffffff' : '#1e293b',
+        color: document.body.classList.contains('light-theme') ? '#1e293b' : '#f1f5f9'
+    });
+}
+
+function aplicarSnapshotMirror(path, snapshot) {
+    mirroringState.basePath = path;
+    mirroringState.editableTree = JSON.parse(JSON.stringify(snapshot.tree));
+    mirroringState.lastUpdate = snapshot.lastUpdate;
+    mirroringState.syncedTree = JSON.parse(JSON.stringify(mirroringState.editableTree));
+    atualizarLabelData(mirroringState.lastUpdate);
+    recalcularContagensVirtuais(mirroringState.editableTree);
+    renderizarArvoresEspelhamento();
+    persistirMirroringState();
+}
+
+function atualizarVisibilidadeBotaoRecall() {
+    const btn = document.getElementById('btn-mirror-recall');
+    if (btn) {
+        const has = Object.keys(mirroringState.pinnedSnapshots).length > 0;
+        btn.classList.toggle('hidden', !has);
+    }
 }
 
 function renderizarArvoreMirror(tree, containerId, isEditable) {
@@ -484,16 +589,31 @@ function renderizarArvoreMirror(tree, containerId, isEditable) {
             content.className = `tree-item-content ${isSelected ? 'selected-multiple' : ''} ${isRoot ? 'mirror-root-item' : ''} ${sClass}`;
             const hasChildren = node.children && node.children.length > 0;
             const toggleIcon = hasChildren ? `<i data-lucide="chevron-right" class="toggle-icon ${node.isExpanded ? 'expanded' : ''}" onclick="event.stopPropagation(); toggleMirrorNode('${node.id}')"></i>` : `<span class="toggle-placeholder"></span>`;
-            const count = node.total_file_count > 0 ? `<span class="${isRoot ? 'root-total-count' : 'inner-count'}">${node.total_file_count}</span>` : "";
-            const iconType = isRoot ? 'folder-tree' : 'folder';
-            content.innerHTML = `${toggleIcon}<div class="${isRoot ? 'mirror-root-container' : 'subfolder-stack'}"><i data-lucide="${iconType}" class="folder-icon"></i>${count}</div><span class="folder-name-text">${node.name}</span>`;
+            
+            // Engenharia Sênior: Unificação de Indicadores
+            // O contador central passa a exibir o Total Recursivo, eliminando a poluição visual da badge externa.
+            const localCount = `<span class="local-count">${node.total_file_count || 0}</span>`;
+            
+            content.innerHTML = `${toggleIcon}<div class="${isRoot ? 'mirror-root-container' : 'subfolder-stack'}"><i data-lucide="${isRoot ? 'folder-tree' : 'folder'}" class="folder-icon"></i>${localCount}</div><span class="folder-name-text">${node.name}</span>`;
         }
         content.dataset.id = node.id; content.draggable = isEditable;
         content.onclick = (e) => { e.stopPropagation(); selecionarItemMirror(node.id); };
         if (node.type !== "file") content.ondblclick = () => toggleMirrorNode(node.id);
         if (isEditable) {
             content.ondragstart = (e) => { mirroringState.draggedIds = [node.id]; e.dataTransfer.setData('text/plain', node.id); };
-            content.ondragover = (e) => { e.preventDefault(); if (node.type !== "file") content.classList.add('drop-target'); };
+            content.ondragover = (e) => { 
+                e.preventDefault(); 
+                if (node.type !== "file") content.classList.add('drop-target'); 
+                
+                // Engenharia Sênior: Auto-Scroll Dinâmico
+                const scrollContainer = document.getElementById('mirror-tree-editable');
+                if (scrollContainer) {
+                    const rect = scrollContainer.getBoundingClientRect();
+                    const threshold = 50; // pixels da borda
+                    if (e.clientY < rect.top + threshold) scrollContainer.scrollTop -= 8;
+                    else if (e.clientY > rect.bottom - threshold) scrollContainer.scrollTop += 8;
+                }
+            };
             content.ondragleave = () => content.classList.remove('drop-target');
             content.ondrop = (e) => {
                 e.preventDefault(); content.classList.remove('drop-target'); if (node.type === "file") return;
@@ -501,27 +621,35 @@ function renderizarArvoreMirror(tree, containerId, isEditable) {
                 mirroringState.draggedIds.forEach(id => {
                     if (id === node.id) return;
                     const source = findMirrorNode(mirroringState.editableTree, id);
-                    if (!source) return;
-
+                    if (!source || !findMirrorParent(mirroringState.editableTree, id)) return;
+                    
                     if (source.type === "directory") {
-                        // Engenharia Sênior: Extração de conteúdo para o destino
-                        // Movemos os filhos (arquivos/pastas) da pasta arrastada para o destino
-                        while (source.children.length > 0) {
-                            const child = source.children.shift();
-                            child.status = "pending";
-                            node.children.push(child);
-                            moved = true;
-                        }
-                    } else {
-                        // Se for apenas um arquivo, movemos normalmente
+                        // Engenharia Sênior: A pasta de origem age como container e NÃO é deletada.
+                        // Extraímos e removemos apenas os arquivos (recursivamente).
+                        const extrairERemover = (n) => {
+                            let fs = [];
+                            if (n.children) {
+                                for (let i = n.children.length - 1; i >= 0; i--) {
+                                    const c = n.children[i];
+                                    if (c.type === "file") {
+                                        fs.push(n.children.splice(i, 1)[0]);
+                                    } else {
+                                        fs = fs.concat(extrairERemover(c));
+                                    }
+                                }
+                            }
+                            return fs;
+                        };
+                        const files = extrairERemover(source);
+                        files.forEach(f => { f.status = "pending"; node.children.push(f); moved = true; });
+                    } else { 
+                        // Se for um arquivo isolado, remove do pai e transfere
                         const parent = findMirrorParent(mirroringState.editableTree, id);
-                        if (parent) {
-                            const idx = parent.children.findIndex(c => c.id === id);
-                            const item = parent.children.splice(idx, 1)[0];
-                            item.status = "pending";
-                            node.children.push(item);
-                            moved = true;
-                        }
+                        const idx = parent.children.findIndex(c => c.id === id);
+                        const sourceItem = parent.children.splice(idx, 1)[0];
+                        sourceItem.status = "pending"; 
+                        node.children.push(sourceItem); 
+                        moved = true; 
                     }
                 });
                 if (moved) { recalcularContagensVirtuais(mirroringState.editableTree); mirroringState.syncedTree = JSON.parse(JSON.stringify(mirroringState.editableTree)); renderizarArvoresEspelhamento(); persistirMirroringState(); }
@@ -539,57 +667,31 @@ function renderizarArvoreMirror(tree, containerId, isEditable) {
 }
 
 function findMirrorNode(node, id) { if (!node) return null; if (node.id === id) return node; for (let c of (node.children || [])) { const f = findMirrorNode(c, id); if (f) return f; } return null; }
-function findMirrorParent(node, id) { if (!node.children) return null; for (let c of node.children) { if (c.id === id) return node; const f = findMirrorParent(c, id); if (f) return f; } return null; }
-function isDescendant(p, id) { if (!p.children) return false; for (let c of p.children) { if (c.id === id || isDescendant(c, id)) return true; } return false; }
-
-function expandirAncestraisMirror(id) {
-    const expandirRecursivo = (node, targetId) => {
-        if (node.id === targetId) return true;
-        if (node.children) {
-            for (let child of node.children) {
-                if (expandirRecursivo(child, targetId)) {
-                    node.isExpanded = true;
-                    return true;
-                }
-            }
-        }
-        return false;
-    };
-    if (mirroringState.editableTree) expandirRecursivo(mirroringState.editableTree, id);
-}
-
+function findMirrorParent(node, id) { if (!node || !node.children) return null; for (let c of node.children) { if (c.id === id) return node; const f = findMirrorParent(c, id); if (f) return f; } return null; }
+function toggleMirrorNode(id) { const n = findMirrorNode(mirroringState.editableTree, id); if (n) { n.isExpanded = !n.isExpanded; mirroringState.syncedTree = JSON.parse(JSON.stringify(mirroringState.editableTree)); renderizarArvoresEspelhamento(); } }
 function selecionarItemMirror(id) {
     mirroringState.selectedIds = [id];
-    expandirAncestraisMirror(id);
+    const expandir = (node, tid) => { if (node.id === tid) return true; if (node.children) { for (let c of node.children) { if (expandir(c, tid)) { node.isExpanded = true; return true; } } } return false; };
+    if (mirroringState.editableTree) expandir(mirroringState.editableTree, id);
     mirroringState.syncedTree = JSON.parse(JSON.stringify(mirroringState.editableTree));
     renderizarArvoresEspelhamento();
-    
-    // Auto-scroll sincronizado para ambos os painéis
-    setTimeout(() => {
-        const els = document.querySelectorAll(`[data-id="${id}"]`);
-        els.forEach(el => el.scrollIntoView({ behavior: 'smooth', block: 'nearest' }));
-    }, 50);
+    setTimeout(() => { const els = document.querySelectorAll(`[data-id="${id}"]`); els.forEach(el => el.scrollIntoView({ behavior: 'smooth', block: 'nearest' })); }, 50);
 }
-
-function toggleMirrorNode(id) { const n = findMirrorNode(mirroringState.editableTree, id); if (n) { n.isExpanded = !n.isExpanded; mirroringState.syncedTree = JSON.parse(JSON.stringify(mirroringState.editableTree)); renderizarArvoresEspelhamento(); } }
 function prepararArvoreEspelhamento(n, isRoot = false) { return { id: n.id || "m_"+Math.random().toString(36).substr(2,9), name: n.name, type: n.type||"directory", full_path: n.full_path, isExpanded: isRoot, file_count: n.file_count||0, total_file_count: n.total_file_count||0, status: null, children: (n.children||[]).map(c => prepararArvoreEspelhamento(c, false)) }; }
 function recalcularContagensVirtuais(n) { let l=0, t=0; if (n.children) n.children.forEach(c => { if (c.type === "file") { l++; t++; } else t += recalcularContagensVirtuais(c); }); n.file_count=l; n.total_file_count=t; return t; }
 function atualizarLabelData(d) { const c = document.getElementById('mirror-last-update-container'), l = document.getElementById('mirror-last-update-date'); if (d && c && l) { l.innerText = d; c.classList.remove('hidden'); } else if (c) c.classList.add('hidden'); }
+
 async function persistirMirroringState() { 
-    if (mirroringState.editableTree && mirroringState.basePath) {
-        mirroringState.history[mirroringState.basePath] = { lastUpdate: mirroringState.lastUpdate, tree: mirroringState.editableTree }; 
-    }
-    await eel.salvar_estado_espelhamento({ 
-        history: mirroringState.history,
-        activePath: mirroringState.basePath,
-        isMirrorMode: mirroringState.isMirrorMode
-    })(); 
+    if (mirroringState.editableTree && mirroringState.basePath) { mirroringState.history[mirroringState.basePath] = { lastUpdate: mirroringState.lastUpdate, tree: mirroringState.editableTree }; }
+    await eel.salvar_estado_espelhamento({ history: mirroringState.history, activePath: mirroringState.basePath, isMirrorMode: mirroringState.isMirrorMode, pinnedSnapshots: mirroringState.pinnedSnapshots })(); 
 }
 async function restaurarMirroringState() { 
     try { 
         const d = await eel.carregar_estado_espelhamento()(); 
         if (d) {
             mirroringState.history = d.history || {}; 
+            mirroringState.pinnedSnapshots = d.pinnedSnapshots || {};
+            atualizarVisibilidadeBotaoRecall();
             if (d.activePath && mirroringState.history[d.activePath]) {
                 mirroringState.basePath = d.activePath;
                 mirroringState.editableTree = mirroringState.history[d.activePath].tree;
@@ -597,78 +699,39 @@ async function restaurarMirroringState() {
                 mirroringState.syncedTree = JSON.parse(JSON.stringify(mirroringState.editableTree));
                 atualizarLabelData(mirroringState.lastUpdate);
             }
-            
-            // Engenharia Sênior: Restauração Visual do Painel Ativo
-            if (d.isMirrorMode) {
-                mirroringState.isMirrorMode = true;
-                document.getElementById('mirroring-section').classList.remove('hidden');
-                document.getElementById('main-menu-section').classList.add('hidden');
-                const btnMenu = document.getElementById('btn-mirroring-menu');
-                if (btnMenu) btnMenu.classList.add('active');
-                if (mirroringState.editableTree) renderizarArvoresEspelhamento();
-                setTimeout(ativarResizerComSeguranca, 100);
-            }
         }
     } catch(e) {} 
 }
+
 function renderizarArvoresEspelhamento() { 
-    // Preserva a integração visual: Não reseta as larguras e alturas customizadas pelo usuário
     renderizarArvoreMirror(mirroringState.editableTree, 'mirror-tree-editable', true); 
     renderizarArvoreMirror(mirroringState.syncedTree, 'mirror-tree-synced', false); 
-    
-    // Engenharia Sênior: Sincronia de Scroll em Tempo Real (Bidirecional)
-    const treeA = document.getElementById('mirror-tree-editable');
-    const treeB = document.getElementById('mirror-tree-synced');
-    
+    const treeA = document.getElementById('mirror-tree-editable'), treeB = document.getElementById('mirror-tree-synced');
     if (treeA && treeB) {
-        const syncScroll = (e) => {
-            const source = e.target;
-            const target = source === treeA ? treeB : treeA;
-            // Remove o listener temporariamente para evitar loop infinito de eventos
-            target.removeEventListener('scroll', syncScroll);
-            target.scrollTop = source.scrollTop;
-            target.addEventListener('scroll', syncScroll);
-        };
-        
-        treeA.addEventListener('scroll', syncScroll);
-        treeB.addEventListener('scroll', syncScroll);
+        const syncScroll = (e) => { const s = e.target, t = s === treeA ? treeB : treeA; t.removeEventListener('scroll', syncScroll); t.scrollTop = s.scrollTop; t.addEventListener('scroll', syncScroll); };
+        treeA.addEventListener('scroll', syncScroll); treeB.addEventListener('scroll', syncScroll);
     }
-
-    // Força o ResizeObserver a revalidar a sincronia vertical após a nova carga de dados
     const container = document.querySelector('.mirroring-container');
-    if (container) {
-        const height = container.offsetHeight;
-        const grid = document.querySelector('.mirror-grid');
-        if (grid) grid.style.height = `${height - 80}px`;
-    }
+    if (container) { const grid = document.querySelector('.mirror-grid'); if (grid) grid.style.height = `${container.offsetHeight - 80}px`; }
 }
+
 function criarNovaPastaMirror() {
     if (!mirroringState.editableTree) return; let target = mirroringState.editableTree;
     if (mirroringState.selectedIds.length > 0) { const n = findMirrorNode(mirroringState.editableTree, mirroringState.selectedIds[0]); if (n) target = n.type === "directory" ? n : findMirrorParent(mirroringState.editableTree, n.id); }
     const id = "m_" + Date.now(); target.isExpanded = true; target.children.push({ id, name: "Nova Pasta", type: "directory", isExpanded: true, file_count: 0, total_file_count: 0, status: "pending", children: [] });
     target.children.sort((a,b) => a.name.localeCompare(b.name, 'pt-BR', { numeric: true })); selecionarItemMirror(id); iniciarRenomeacaoMirror(); persistirMirroringState();
 }
+
 function iniciarRenomeacaoMirror() {
     if (mirroringState.selectedIds.length === 0) return; const id = mirroringState.selectedIds[0], n = findMirrorNode(mirroringState.editableTree, id), el = document.querySelector(`#mirror-tree-editable [data-id="${id}"]`);
     if (!n || !el) return; const span = el.querySelector('.folder-name-text') || el.querySelector('.file-name-text') || el.querySelector('span');
     const input = document.createElement('input'); input.type = 'text'; input.className = 'inline-rename-input'; input.value = n.name;
     span.style.display = 'none'; span.parentNode.insertBefore(input, span); 
-
-    // Engenharia Sênior: Seleção inteligente com atraso para garantir foco preciso no DOM
-    setTimeout(() => {
-        input.focus();
-        if (n.type === "file") {
-            const lastDot = n.name.lastIndexOf('.');
-            if (lastDot > 0) input.setSelectionRange(0, lastDot);
-            else input.select();
-        } else {
-            input.select();
-        }
-    }, 10);
-
+    setTimeout(() => { input.focus(); if (n.type === "file") { const lastDot = n.name.lastIndexOf('.'); if (lastDot > 0) input.setSelectionRange(0, lastDot); else input.select(); } else input.select(); }, 10);
     const done = (salvar) => { if (salvar && input.value.trim() && input.value.trim() !== n.name) { n.name = input.value.trim(); n.status = "pending"; mirroringState.syncedTree = JSON.parse(JSON.stringify(mirroringState.editableTree)); persistirMirroringState(); } renderizarArvoresEspelhamento(); };
     input.onkeydown = (e) => { if (e.key === 'Enter') done(true); if (e.key === 'Escape') done(false); }; input.onblur = () => done(true);
 }
+
 function removerPastaMirror() {
     if (mirroringState.selectedIds.length === 0) return; confirmar("Remover", "Excluir itens?").then(ok => {
         if (ok) {
@@ -677,78 +740,20 @@ function removerPastaMirror() {
         }
     });
 }
-configurarEventosMirror();
 
-// Motor Unificado de Redimensionamento (H+V) Coordenado
 function inicializarResizerUnificado() {
-    const divider = document.querySelector('.mirror-divider');
-    const gripV = document.querySelector('.resize-handle');
-    const leftPanel = document.getElementById('mirror-panel-left');
-    const rightPanel = document.getElementById('mirror-panel-right');
-    const grid = document.querySelector('.mirror-grid');
-    const mainContainer = document.querySelector('.mirroring-container');
-
+    const divider = document.querySelector('.mirror-divider'), gripV = document.querySelector('.resize-handle'), leftPanel = document.getElementById('mirror-panel-left'), rightPanel = document.getElementById('mirror-panel-right'), grid = document.querySelector('.mirror-grid'), mainContainer = document.querySelector('.mirroring-container');
     if (!divider || !gripV || !leftPanel || !rightPanel || !grid || !mainContainer) return;
-
-    let isResizingH = false;
-    let isResizingV = false;
-
-    // --- Redimensionamento Horizontal ---
-    divider.addEventListener('mousedown', (e) => {
-        isResizingH = true;
-        document.body.style.cursor = 'col-resize';
-        divider.classList.add('active');
-        e.preventDefault();
-    });
-
-    // --- Redimensionamento Vertical ---
-    gripV.addEventListener('mousedown', (e) => {
-        isResizingV = true;
-        document.body.style.cursor = 'ns-resize';
-        e.preventDefault();
-    });
-
+    let isResizingH = false, isResizingV = false;
+    divider.addEventListener('mousedown', (e) => { isResizingH = true; document.body.style.cursor = 'col-resize'; divider.classList.add('active'); e.preventDefault(); });
+    gripV.addEventListener('mousedown', (e) => { isResizingV = true; document.body.style.cursor = 'ns-resize'; e.preventDefault(); });
     document.addEventListener('mousemove', (e) => {
-        // Lógica Horizontal
-        if (isResizingH) {
-            const gridRect = grid.getBoundingClientRect();
-            let mouseX = e.clientX - gridRect.left;
-            let percentage = (mouseX / gridRect.width) * 100;
-            percentage = Math.max(15, Math.min(85, percentage));
-            leftPanel.style.flex = 'none';
-            rightPanel.style.flex = 'none';
-            leftPanel.style.width = `${percentage}%`;
-            rightPanel.style.width = `${100 - percentage - 1}%`;
-        }
-
-        // Lógica Vertical (Custom Grip)
-        if (isResizingV) {
-            const containerRect = mainContainer.getBoundingClientRect();
-            let newHeight = e.clientY - containerRect.top;
-            newHeight = Math.max(400, Math.min(1200, newHeight));
-            mainContainer.style.height = `${newHeight}px`;
-            grid.style.height = `${newHeight - 80}px`; // Sincronia instantânea
-        }
+        if (isResizingH) { const gridRect = grid.getBoundingClientRect(); let percentage = ((e.clientX - gridRect.left) / gridRect.width) * 100; percentage = Math.max(15, Math.min(85, percentage)); leftPanel.style.flex = 'none'; rightPanel.style.flex = 'none'; leftPanel.style.width = `${percentage}%`; rightPanel.style.width = `${100 - percentage - 1}%`; }
+        if (isResizingV) { const containerRect = mainContainer.getBoundingClientRect(); let newHeight = Math.max(400, Math.min(1200, e.clientY - containerRect.top)); mainContainer.style.height = `${newHeight}px`; grid.style.height = `${newHeight - 80}px`; }
     });
-
-    document.addEventListener('mouseup', () => {
-        isResizingH = false;
-        isResizingV = false;
-        document.body.style.cursor = 'default';
-        divider.classList.remove('active');
-    });
+    document.addEventListener('mouseup', () => { isResizingH = false; isResizingV = false; document.body.style.cursor = 'default'; divider.classList.remove('active'); });
 }
 
-// Ativa o resizer unificado ao carregar com verificação de segurança
-function ativarResizerComSeguranca() {
-    const check = document.querySelector('.mirroring-container');
-    if (check) {
-        inicializarResizerUnificado();
-    } else {
-        // Tenta novamente se o módulo ainda não foi injetado
-        setTimeout(ativarResizerComSeguranca, 500);
-    }
-}
-
+function ativarResizerComSeguranca() { if (document.querySelector('.mirroring-container')) inicializarResizerUnificado(); else setTimeout(ativarResizerComSeguranca, 500); }
 document.addEventListener('DOMContentLoaded', ativarResizerComSeguranca);
 window.addEventListener('load', ativarResizerComSeguranca);

@@ -1,65 +1,79 @@
-# 🛠️ Structure Builder: O Maestro das Pastas 📁✨
+# 🛠️ Structure Builder Pro: Engenharia de Workspaces 📁✨
 
-![Status](https://img.shields.io/badge/Status-Finalizado-brightgreen)
+![Status](https://img.shields.io/badge/Status-Versão_5.3-brightgreen)
 ![Python](https://img.shields.io/badge/Python-3.12%2B-blue)
-![UI](https://img.shields.io/badge/UI-CustomTkinter-orange)
+![UI](https://img.shields.io/badge/UI-Eel%20%7C%20HTML5%20%7C%20CSS3-orange)
 
-O **Structure Builder** não é apenas um criador de pastas; é um ecossistema de produtividade projetado para quem lida com estruturas de diretórios complexas e odeia o trabalho repetitivo. Seja para organizar projetos de software, estruturar documentos de clientes ou gerenciar backups, ele faz o trabalho pesado por você.
-
----
-
-## 🚀 O que ele faz de "Mágico"?
-
-*   **⚡ Clonagem Inteligente**: Viu uma estrutura de pastas perfeita no seu Windows? Clique em `+ Modelo`, selecione a pasta e o software "aprende" toda a hierarquia instantaneamente.
-*   **🧠 Memória de Elefante**: Salve até 10 modelos favoritos na barra de acesso rápido. Eles ficam guardados mesmo depois de fechar o programa.
-*   **🛠️ Editor de Árvore Dinâmico**: Adicione, remova e renomear pastas em uma interface visual fluida antes de criá-las de verdade.
-*   **🔄 Modo de Atualização**: Carregue uma pasta que já existe, faça as alterações na interface e o software aplica as mudanças (renomeia e deleta) direto no disco.
-*   **🌐 Salvar Como (Quick Deploy)**: Escolha qualquer unidade ou local do Windows na hora para "despejar" sua estrutura. Agora permite definir um nome personalizado para a pasta raiz no momento da criação, preservando o nome original do seu modelo.
-*   **📂 Visualização Limpa**: A árvore de pastas agora inicia recolhida por padrão (exceto a pasta raiz), facilitando a navegação em estruturas complexas e mantendo o foco no que importa.
+O **Structure Builder Pro** evoluiu de um simples criador de diretórios para uma estação de trabalho completa para gerenciamento de hierarquias de arquivos. Combinando a robustez do Python com a fluidez de interfaces web modernas, ele oferece controle total sobre a organização de dados em larga escala.
 
 ---
 
-## 🎨 Interface e Experiência (UX)
+## 🚀 Funcionalidades de Engenharia Sênior
 
-O software foi dividido logicamente para que você nunca se perca:
+### 🔄 Módulo de Espelhamento Inteligente
+O recurso mais poderoso para quem precisa reorganizar projetos complexos em tempo real:
+*   **Arraste de Conteúdo Puro**: Ao arrastar uma pasta, o sistema extrai todos os arquivos recursivamente para o destino, mantendo a estrutura original intacta como um contêiner persistente.
+*   **Auto-Scroll Dinâmico**: Navegação fluida em árvores gigantes; o scroll acompanha o movimento do mouse durante o arraste.
+*   **Sincronia Bidirecional**: Dois painéis sincronizados (Edição vs Visualização) garantem que você veja o impacto de cada mudança antes de aplicá-la fisicamente no Windows Explorer.
 
-1.  **Painel de Ações (Esquerda)**: Onde a mágica começa e termina (Carregar, Criar, Salvar).
-2.  **Configurações de Destino (Topo)**: Defina o "Onde" e o "Quem" da sua nova estrutura.
-3.  **Cinto de Utilidades (Centro)**: Seus 10 modelos rápidos e o botão de implementação rápida.
-4.  **Árvore de Edição (Centro/Base)**: Onde você desenha e refina sua estrutura.
+### 🧠 Central de Gestão de Memórias (Snapshots)
+Esqueça o medo de perder edições manuais complexas:
+*   **Multi-Snapshot Registry**: Salve "Lembranças" de múltiplos projetos simultaneamente. Cada memória é chaveada pelo caminho físico da pasta.
+*   **Identificação Fiel**: Snapshots assumem o nome real da pasta raiz e preservam data e hora exatas para rastreabilidade histórica.
+*   **Gestão de Recursos**: Interface de alto contraste para recuperar ou excluir lembranças, com liberação imediata de espaço em disco e memória RAM.
 
----
-
-## ⌨️ Atalhos de Teclado (Para Power Users)
-
-*   <kbd>Ctrl</kbd> + <kbd>N</kbd>: Cria uma nova pasta (ou subpasta se houver uma selecionada).
-*   <kbd>Delete</kbd>: Remove a pasta selecionada na árvore ou deleta um modelo rápido da barra.
-*   <kbd>Enter</kbd>: Confirma o novo nome da pasta durante a edição.
-
----
-
-## 🛠️ Tecnologias Utilizadas
-
-*   **Python 3**: A alma do projeto.
-*   **CustomTkinter**: Para uma interface moderna, escura e elegante.
-*   **JSON**: Para persistência de modelos sem necessidade de bancos de dados pesados.
-*   **Subprocess/OS**: Interação profunda e segura com o Sistema de Arquivos do Windows.
+### 📊 Visualização e Diagnóstico
+*   **Contagem Unificada**: Ícones de pastas exibem o total recursivo de arquivos internamente, eliminando ambiguidades.
+*   **Diagramas Automáticos**: Gere diagramas Mermaid em tempo real da sua estrutura e exporte como SVG para documentação.
+*   **Harmonia Cromática**: Interface otimizada para os modos Dark e Light, preservando o contraste e a legibilidade profissional.
 
 ---
 
-## 📖 Como Rodar?
+## 🎨 Arquitetura de Interface (UX)
 
-1.  Certifique-se de ter o Python instalado.
-2.  Instale as dependências: `pip install -r requirements.txt`
-3.  Execute: `python main.py`
-
----
-
-## 📝 Documentação Interna
-
-O software possui um **Manual Interativo** em HTML que pode ser acessado diretamente pelo botão "Manual" na interface, explicando cada detalhe técnico e funcional de forma visual e amigável.
+O software utiliza o padrão **Glassmorphism** e **Modern UI**:
+1.  **Sidebar de Acesso Rápido**: Gerenciamento de modelos, biblioteca e temas.
+2.  **Painel de Espelhamento**: Área de trabalho expandida com redimensionamento horizontal e vertical dinâmico.
+3.  **Motor de Persistência**: Todo o estado da sua sessão é guardado silenciosamente no AppData, permitindo retomar o trabalho exatamente de onde parou.
 
 ---
 
-> **"A organização é a chave para a liberdade criativa."** 📁✨  
-> *Projeto finalizado com sucesso para máxima produtividade.*
+## ⌨️ Comandos e Atalhos Profissionais
+
+*   <kbd>F2</kbd>: Renomeação inteligente (com preservação de extensão para arquivos).
+*   <kbd>Delete</kbd>: Exclusão cirúrgica de itens na árvore ou lembranças no registro.
+*   <kbd>Ctrl</kbd> + <kbd>N</kbd>: Criação instantânea de novos contêineres.
+*   **Botão Voltar**: Navegação de saída destacada para maior orientação espacial.
+
+---
+
+## 🛠️ Stack Tecnológica
+
+*   **Back-end**: Python 3.12+ utilizando `Eel` para ponte de comunicação assíncrona.
+*   **Front-end**: HTML5, CSS3 (Variáveis Dinâmicas) e JavaScript Vanila (DOM Virtual).
+*   **Motor de Arquivos**: Lógica recursiva sênior com suporte a caminhos longos (UNC) no Windows.
+*   **Persistência**: JSON estruturado com compactação automática de dados.
+
+---
+
+## 📖 Como Iniciar
+
+1.  Instale as dependências:
+    ```bash
+    pip install -r requirements.txt
+    ```
+2.  Execute o maestro:
+    ```bash
+    python bridge.py
+    ```
+
+---
+
+## 📝 Documentação e Integridade
+
+Acesse o **Manual Interativo** diretamente pela interface para detalhes técnicos sobre o motor de sincronização e regras de segurança de dados. O sistema prioriza a não-regressão e a integridade do sistema de arquivos do usuário.
+
+---
+
+> **"A estrutura é a espinha dorsal da eficiência."** 📁✨  
+> *Builder Pro: Projetado por engenheiros, para engenheiros.*

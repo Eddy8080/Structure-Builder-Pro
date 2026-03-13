@@ -1,4 +1,4 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
@@ -13,6 +13,8 @@
             --text: #f1f5f9;
             --text-muted: #94a3b8;
             --accent: #10b981;
+            --warning: #fbbf24;
+            --danger: #ef4444;
             --border: rgba(255, 255, 255, 0.1);
         }
 
@@ -61,7 +63,7 @@
             background: #000;
             padding: 2px 6px;
             border-radius: 4px;
-            color: #fbbf24;
+            color: var(--warning);
             font-family: 'Fira Code', monospace;
             font-size: 0.9em;
         }
@@ -93,6 +95,11 @@
         .badge-new { 
             background: var(--accent); 
             color: #fff; 
+        }
+
+        .badge-pro {
+            background: var(--warning);
+            color: #000;
         }
 
         .flex-title {
@@ -146,99 +153,91 @@
         strong {
             color: #fff;
         }
+
+        .pro-highlight {
+            color: var(--warning);
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
     <header>
-        <h1>Structure Builder Pro <small>v2.1</small></h1>
-        <p>Guia de Operação e Atalhos Técnicos</p>
+        <h1>Structure Builder Pro <small>v5.3</small></h1>
+        <p>Estação de Trabalho para Engenharia de Workspaces</p>
     </header>
 
     <section class="card">
         <h2>O que é o Structure Builder Pro?</h2>
-        <p>O <strong>Structure Builder Pro</strong> é uma ferramenta avançada de arquitetura de diretórios, projetada para automatizar a criação e gestão de estruturas complexas de pastas no Windows. Ele atua como um "arquiteto de sistemas de arquivos", permitindo que você projete visualmente como seus projetos devem ser organizados antes de aplicar as mudanças fisicamente.</p>
+        <p>O <strong>Structure Builder Pro</strong> evoluiu de um criador de pastas para um ecossistema completo de gestão de hierarquias. Ele permite projetar, espelhar e persistir estruturas de dados complexas com a segurança do Python e a fluidez de interfaces web modernas.</p>
         
-        <h3>Por que usar esta aplicação?</h3>
+        <h3>Pilares da Engenharia Sênior</h3>
         <ul>
-            <li><strong>Padronização Instantânea:</strong> Garante que todos os seus projetos sigam a mesma hierarquia, eliminando a bagunça e facilitando a localização de arquivos.</li>
-            <li><strong>Agilidade Extrema:</strong> O que levaria minutos para ser criado manualmente (pasta por pasta) é resolvido em segundos através de modelos pré-definidos.</li>
-            <li><strong>Organização Inteligente:</strong> Ideal para fotógrafos, engenheiros, desenvolvedores e gestores que lidam com fluxos de trabalho repetitivos e precisam de uma base sólida para seus documentos.</li>
-            <li><strong>Segurança Operacional:</strong> Evita erros comuns de digitação ou criação de pastas em locais errados, sanitizando nomes e validando caminhos automaticamente.</li>
-        </ul>
-
-        <h3>Diferenciais em relação ao Windows Explorer nativo</h3>
-        <ul>
-            <li><strong>Criação em Massa:</strong> No Explorer, você cria uma pasta por vez. Aqui, você projeta centenas de pastas visualmente e as gera com um único clique.</li>
-            <li><strong>Modelos Reutilizáveis:</strong> O Explorer não possui "memória" de estruturas. No Structure Builder, você salva seus padrões favoritos e os replica instantaneamente em novos projetos.</li>
-            <li><strong>Visualização Limpa:</strong> A árvore agora inicia recolhida por padrão (Auto-Collapse), facilitando o foco em grandes arquiteturas de pastas.</li>
-            <li><strong>Prevenção de Erros:</strong> Nossa ferramenta sanitiza os nomes preventivamente, garantindo que nenhum caractere proibido ou caminho inválido interrompa seu fluxo de trabalho.</li>
-            <li><strong>Visão Macro (Diagramas):</strong> Oferecemos um mapa visual (Diagrama) da sua arquitetura, algo que a visão de lista do Windows não consegue proporcionar para planejamento de grandes projetos.</li>
+            <li><strong>Módulo de Espelhamento:</strong> Reorganize projetos existentes em tempo real com sincronia bidirecional.</li>
+            <li><strong>Central de Memórias:</strong> Nunca perca seu progresso com o sistema de Snapshots persistentes por projeto.</li>
+            <li><strong>Integridade de Dados:</strong> Motor recursivo com suporte a caminhos longos e sanitização automática de caracteres.</li>
+            <li><strong>Diagnóstico Visual:</strong> Diagramas automáticos e contagens unificadas para controle total do seu workspace.</li>
         </ul>
     </section>
 
     <section class="card">
-        <h2>1. Fluxo de Trabalho Principal</h2>
-        <ol>
-            <li><strong>Diretório Base:</strong> Clique em "Selecionar" para escolher onde suas pastas serão criadas (Ex: <code>C:\MeusProjetos</code>).</li>
-            <li><strong>Pasta Destino:</strong> Digite o nome da pasta principal e pressione <code>Enter</code> ou clique no ícone de check.
-                <br><em>A pasta aparecerá automaticamente na árvore como raiz.</em></li>
-            <li><strong>Construção:</strong> Use o botão direito na árvore para criar subpastas ou arraste um <strong>Modelo Rápido</strong>.</li>
-            <li><strong>Implementação:</strong> Clique em <strong>Salvar Como</strong>. O sistema perguntará o nome da pasta raiz física para o Windows Explorer, permitindo que você mantenha o nome original do modelo intacto na biblioteca.</li>
-            <li><strong>Finalização:</strong> A estrutura será gerada fisicamente no Windows no local escolhido.</li>
-        </ol>
+        <span class="badge badge-pro">Exclusivo Pro</span>
+        <h2>1. Módulo de Espelhamento Inteligente</h2>
+        <p>O recurso definitivo para organizar o caos. No painel de espelhamento, você trabalha com dois painéis sincronizados:</p>
+        <ul>
+            <li><strong>Arraste de Conteúdo Puro:</strong> Ao arrastar uma pasta, o sistema extrai <span class="pro-highlight">todos os arquivos</span> recursivamente para o destino. A pasta de origem permanece como um contêiner (agora vazio), preservando sua estrutura caso deseje reutilizá-la.</li>
+            <li><strong>Auto-Scroll Dinâmico:</strong> Durante o arraste, a barra de rolagem acompanha o mouse automaticamente, permitindo mover arquivos entre diretórios muito distantes.</li>
+            <li><strong>Sincronia de Painéis:</strong> O painel da esquerda (Edição) e o da direita (Visualização do Windows) estão sempre alinhados, garantindo que você veja o resultado final antes de aplicar fisicamente.</li>
+        </ul>
     </section>
 
     <section class="card">
         <span class="badge badge-new">Novidade</span>
-        <h2>2. Visualização e Diagramas</h2>
-        <p>A árvore de pastas foi otimizada para produtividade visual:</p>
+        <h2>2. Central de Gestão de Memórias (Lembrar-me)</h2>
+        <p>Gerencie múltiplos projetos simultaneamente sem perder o estado de cada um:</p>
         <ul>
-            <li><strong>Auto-Collapse:</strong> Ao carregar modelos ou estruturas existentes, todas as subpastas iniciam recolhidas. Apenas a pasta raiz permanece expandida para garantir clareza inicial.</li>
-            <li><strong>Mapeamento:</strong> Diferencia visualmente a pasta raiz das subpastas no Diagrama.</li>
-            <li><strong>Exportação:</strong> Permite baixar o diagrama em formato <code>.SVG</code> de alta qualidade.</li>
+            <li><strong>Snapshots Contextuais:</strong> O botão <code>Lembrar-me</code> salva a árvore de edição atual vinculada ao caminho da pasta.</li>
+            <li><strong>Recuperação Global:</strong> Se a tela estiver limpa, o botão <code>Recarregar Lembrança</code> abre uma lista de alto contraste com todos os seus projetos salvos, nomes reais e carimbo de data/hora.</li>
+            <li><strong>Exclusão Segura:</strong> Cada memória pode ser excluída individualmente via botão <code>X</code> (vermelho), liberando espaço físico no disco e na memória RAM instantaneamente.</li>
         </ul>
     </section>
 
     <section class="card">
-        <h2>3. Atalhos de Teclado</h2>
-        <p>A interface possui dicas visuais nos menus de contexto, mas você também pode usar o teclado para ser mais rápido:</p>
+        <h2>3. Visualização e Precisão</h2>
+        <ul>
+            <li><strong>Contagem Unificada:</strong> O número no centro do ícone da pasta exibe o <span class="pro-highlight">Total Recursivo</span> de arquivos. Se o ícone diz <code>0</code>, o ramo inteiro está vazio.</li>
+            <li><strong>Auto-Collapse Inteligente:</strong> Estruturas complexas iniciam recolhidas para manter o foco na raiz.</li>
+            <li><strong>Diagramas Mermaid:</strong> Gere mapas mentais da sua arquitetura e exporte em <code>.SVG</code> com um clique.</li>
+        </ul>
+    </section>
+
+    <section class="card">
+        <h2>4. Atalhos de Teclado Profissionais</h2>
         <div class="shortcut-grid">
-            <div class="shortcut-item"><code>F2</code> <br>Renomear pasta ou modelo selecionado.</div>
-            <div class="shortcut-item"><code>Delete</code> <br>Remover pasta ou modelo (com confirmação).</div>
-            <div class="shortcut-item"><code>Ctrl + N</code> <br>Criar uma nova pasta dentro da selecionada.</div>
-            <div class="shortcut-item"><code>Enter</code> <br>Confirmar renomeação ou pasta principal.</div>
-            <div class="shortcut-item"><code>Esc</code> <br>Fechar menus de contexto ou diagrama.</div>
+            <div class="shortcut-item"><code>F2</code> <br>Renomear item (preserva extensão de arquivos).</div>
+            <div class="shortcut-item"><code>Delete</code> <br>Excluir pastas, arquivos ou memórias guardadas.</div>
+            <div class="shortcut-item"><code>Ctrl + N</code> <br>Criar novo contêiner instantaneamente.</div>
+            <div class="shortcut-item"><code>Enter</code> <br>Confirmar renomeação ou ação principal.</div>
+            <div class="shortcut-item"><code>Esc</code> <br>Fechar diálogos, menus ou diagramas.</div>
         </div>
     </section>
 
     <section class="card">
-        <h2 class="flex-title"><i>🔌</i> Importância de Salvar Estruturas (Pen Drive)</h2>
-        <p>O botão com o ícone de <strong>Pen Drive (USB)</strong> na barra lateral é a sua ferramenta de segurança máxima e organização de longo prazo:</p>
+        <h2 class="flex-title"><i>🎨</i> Harmonia Visual e Temas</h2>
+        <p>O software respeita sua preferência estética e de conforto visual:</p>
         <ul>
-            <li><strong>Portabilidade:</strong> Ao salvar como arquivo <code>.json</code>, você cria um backup físico da sua estrutura. Se você formatar o computador ou mudar de empresa, seus designs de pastas estarão salvos em seu HD, nuvem ou pendrive real.</li>
-            <li><strong>Biblioteca Ilimitada:</strong> A lista de "Modelos Rápidos" no centro é para o uso diário (limite de 10). Usando o botão de Salvar, você pode criar centenas de modelos diferentes organizados em pastas no seu computador.</li>
-            <li><strong>Desacoplamento de Nomes:</strong> Ao usar "Salvar Como" em um modelo, você pode dar nomes diferentes para cada projeto real sem alterar o nome do modelo salvo na biblioteca.</li>
-            <li><strong>Restauração Ágil:</strong> Use o botão <strong>Restaurar Modelos</strong> para carregar bibliotecas inteiras de uma só vez, recuperando todo o seu ecossistema de trabalho em segundos.</li>
-        </ul>
-    </section>
-
-    <section class="card">
-        <h2>5. Notas Técnicas</h2>
-        <ul>
-            <li><strong>Ordenação Natural:</strong> A árvore visual organiza-se automaticamente em ordem alfanumérica, idêntica ao Windows Explorer (ex: <code>01 - Pasta</code> vem antes de <code>02 - Pasta</code>, e <code>Pasta 2</code> antes de <code>Pasta 10</code>).</li>
-            <li><strong>Persistência:</strong> O tema (Dark/Light) e os modelos são salvos automaticamente.</li>
-            <li><strong>Segurança:</strong> O programa sanitiza nomes de pastas, removendo caracteres proibidos pelo Windows (<code>/ \ : * ? " < > |</code>).</li>
-            <li><strong>Sincronização Fiel:</strong> Ao clicar em "Aplicar", o Windows Explorer é atualizado para ser um espelho exato do que você vê na tela.</li>
+            <li><strong>Modo Dark:</strong> Fundo em azul marinho profundo com realces em ouro vibrante.</li>
+            <li><strong>Modo Light:</strong> Fundo pérola com pastas em azul profissional e alto contraste para leitura diurna.</li>
+            <li><strong>Persistência de Tema:</strong> Sua escolha de cores é lembrada em cada inicialização.</li>
         </ul>
     </section>
 
     <footer>
         <p><strong>Engenheiro de Software:</strong> Edilson Monteiro Neto</p>
-        <p><strong>Última Atualização:</strong> 09 de Março de 2026</p>
+        <p><strong>Última Atualização:</strong> 13 de Março de 2026</p>
         <p><strong>Contato:</strong> <a href="mailto:edilson.monteiro@anagma.com.br">edilson.monteiro@anagma.com.br</a></p>
         <p><strong>Anagma Contabilidade</strong> - Engenharia de Sistemas Inteligentes</p>
         <p><a href="https://www.anagma.com.br" target="_blank" rel="noopener">www.anagma.com.br</a></p>
-        <p class="footer-note">Structure Builder Pro - Desenvolvido para máxima produtividade.</p>
+        <p class="footer-note">Structure Builder Pro - Projetado por engenheiros, para engenheiros.</p>
     </footer>
 </body>
 </html>

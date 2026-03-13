@@ -152,7 +152,14 @@ mirror_session.json
 TESTE_AUTOMATICO_MOTOR/
 TESTE_REPRODUCAO_ESPELHAMENTO/
 TESTE_VALIDACAO_ESPELHAMENTO/
+TESTE_REPRODUCAO_ARRASTE/
 TesteParaUpdate/
+validar_*.py
+testar_*.py
+homologacao_*.py
+stress_test_*.py
+reproduzir_bug_*.py
+verificar_*.py
 
 # OS Specific
 Thumbs.db

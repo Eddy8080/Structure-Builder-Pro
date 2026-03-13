@@ -749,12 +749,23 @@ button[id="btn-confirm-main"]:hover {
 }
 
 .nav-btn-back {
-    display: flex; align-items: center; gap: 8px; background: transparent;
-    border: 1px solid var(--border-color); color: var(--text-secondary);
-    padding: 8px 16px; border-radius: 8px; cursor: pointer; transition: all 0.2s;
+    display: flex; align-items: center; gap: 10px; 
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(37, 99, 235, 0.1));
+    border: 1px solid rgba(59, 130, 246, 0.4); 
+    color: #60a5fa;
+    padding: 10px 20px; border-radius: 10px; cursor: pointer; 
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    font-weight: 600;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
-.nav-btn-back:hover { background: var(--hover-color); border-color: var(--accent-color); color: var(--text-primary); }
+.nav-btn-back:hover { 
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(37, 99, 235, 0.2));
+    border-color: #3b82f6; 
+    color: #ffffff; 
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(59, 130, 246, 0.2);
+}
 
 /* Ícones de Pasta Grandes (42px) e Amarelos */
 .mirror-tree .folder-icon {
@@ -763,7 +774,7 @@ button[id="btn-confirm-main"]:hover {
     color: #fbbf24 !important; /* Amarelo */
 }
 
-/* Badges Centralizadas Flutuantes (Sem tocar bordas) */
+/* Badges de Contagem Dupla (Local vs Total) */
 .subfolder-stack, .mirror-root-container { 
     position: relative; 
     display: flex; 
@@ -774,59 +785,164 @@ button[id="btn-confirm-main"]:hover {
     margin-right: 12px; 
 }
 
-.inner-count {
+.local-count {
     position: absolute;
-    top: 55%; /* Ajuste vertical para o centro visual da "barriga" da pasta */
+    top: 58%; /* Ajustado para a barriga da pasta */
     left: 50%;
     transform: translate(-50%, -50%);
-    font-size: 0.7rem;
+    font-size: 0.75rem; /* Um pouco maior para clareza */
     font-weight: 900;
     color: #fbbf24;
-    background: transparent;
     z-index: 2;
     pointer-events: none;
     line-height: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    text-shadow: 1px 1px 3px rgba(0,0,0,0.5); /* Sombra para profundidade */
 }
 
-.root-total-count {
+.total-count-badge {
     position: absolute;
-    top: -12px;
-    left: 50%;
-    transform: translateX(-50%);
-    font-size: 0.85rem;
-    font-weight: 900;
-    color: #fbbf24; /* Amarelo vibrante */
-    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8); /* Sombra forte para destacar no fundo escuro */
-    z-index: 2;
+    top: -8px;
+    right: -8px;
+    background: #3b82f6;
+    color: white;
+    font-size: 0.65rem;
+    font-weight: 700;
+    padding: 2px 6px;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    z-index: 3;
     pointer-events: none;
-    transition: all 0.3s ease;
 }
 
-/* Ajuste de Contraste para o Tema Claro */
-.light-theme .root-total-count,
-.light-theme .inner-count {
-    color: #2563eb; /* Azul para contraste no fundo claro */
-    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2); /* Destaque idêntico para ambos */
-    font-weight: 900;
+/* Ajuste para a Raiz */
+.mirror-root-item .total-count-badge {
+    background: #fbbf24;
+    color: #0f172a;
+    font-size: 0.75rem;
+    top: -12px;
+    right: -12px;
 }
 
-.light-theme .mirror-tree .folder-icon {
-    color: #2563eb !important; /* Todas as pastas da árvore em Azul no Modo Light */
-}
-
-/* Painel B - Amarelo Opaco na Badge */
-.readonly .inner-count, .readonly .root-total-count {
+/* Painel B (Leitura) - Opacidade reduzida para foco no Painel A */
+.readonly .local-count, .readonly .total-count-badge {
     opacity: 0.6;
 }
 
-/* Status de Sincronização */
-.status-applied .folder-icon, 
-.status-applied .folder-name-text,
-.status-applied i, 
-.status-applied span { color: #10b981 !important; }
+/* Modo Claro - Harmonização Sênior */
+.light-theme .local-count { 
+    color: #ffffff; /* Texto branco sobre pasta azul */
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+}
+
+.light-theme .mirror-tree .folder-icon {
+    color: #3b82f6 !important; /* Pastas azuis no modo claro para sobriedade */
+}
+
+.light-theme .total-count-badge { 
+    background: #2563eb; 
+    color: #ffffff;
+    border-color: rgba(255,255,255,0.3);
+}
+
+.light-theme .mirror-root-item .total-count-badge {
+    background: #1e293b;
+    color: #ffffff;
+}
+
+.light-theme .nav-btn-back {
+    background: linear-gradient(135deg, rgba(37, 99, 235, 0.05), rgba(29, 78, 216, 0.05));
+    border-color: rgba(37, 99, 235, 0.3);
+    color: #2563eb;
+}
+
+.light-theme .nav-btn-back:hover {
+    background: #2563eb;
+    color: #ffffff;
+}
+
+
+/* Central de Gestão de Memórias - Alto Contraste Sênior */
+.memory-management-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    max-height: 400px;
+    overflow-y: auto;
+    padding: 10px;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 12px;
+}
+
+.memory-item {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    background: var(--sidebar-bg);
+    border: 1px solid var(--border-color);
+    padding: 12px 16px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+.memory-item:hover {
+    border-color: var(--accent-color);
+    transform: translateX(5px);
+    background: rgba(59, 130, 246, 0.05);
+}
+
+.memory-info {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+}
+
+.memory-name {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 2px;
+}
+
+.memory-date {
+    font-size: 0.75rem;
+    color: var(--accent-color);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.delete-memory-btn {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    color: #ef4444;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.2s;
+    flex-shrink: 0;
+}
+
+.delete-memory-btn:hover {
+    background: #ef4444;
+    color: white;
+    transform: scale(1.1);
+}
+
+/* Ajustes de Tema Claro */
+.light-theme .memory-item { background: #ffffff; }
+.light-theme .memory-name { color: #0f172a; }
+.light-theme .memory-date { color: #2563eb; }
+
 
 .status-pending .folder-icon, .status-pending .file-item-mirror i { color: #3b82f6 !important; }
 
