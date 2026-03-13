@@ -71,7 +71,20 @@ async function executarVerificacaoManual() {
             });
 
             if (confirm.isConfirmed) {
-                alertar("Aguarde", "O download do instalador iniciará em segundo plano. O programa será reiniciado ao concluir.", "success");
+                mostrarLoader("Baixando atualização...");
+                // Busca o executável nos assets da release do GitHub
+                const assetExe = res.assets.find(a => a.name.endsWith('.exe'));
+                if (assetExe) {
+                    const downloadUrl = assetExe.browser_download_url;
+                    const resUpdate = await eel.executar_download_e_atualizar(downloadUrl)();
+                    if (resUpdate && resUpdate.error) {
+                        esconderLoader();
+                        alertar("Erro no Update", resUpdate.error, 'error');
+                    }
+                } else {
+                    esconderLoader();
+                    alertar("Erro", "Arquivo executável não encontrado no GitHub.", 'error');
+                }
             }
         } else {
             const btn = document.getElementById('btn-check-update');

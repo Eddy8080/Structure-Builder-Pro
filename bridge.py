@@ -294,6 +294,35 @@ def obter_informacoes_locais():
     """Retorna a versão instalada no momento."""
     return version_manager.get_local_info()
 
+@eel.expose
+def executar_download_e_atualizar(url_download):
+    """
+    Realiza o download do instalador e inicia o processo de substituição.
+    Pilar Técnico: Fluxo do Instalador (Hot-Swap).
+    """
+    import tempfile
+    
+    try:
+        temp_dir = tempfile.gettempdir()
+        dest_path = os.path.join(temp_dir, "StructureBuilderPro_Update.exe")
+        
+        # Realiza o download físico
+        sucesso = version_manager.download_installer(url_download, dest_path)
+        
+        if sucesso:
+            # Engenharia Sênior: Disparo do novo instalador e fechamento do app atual
+            # O instalador do Inno Setup cuidará da substituição dos arquivos
+            subprocess.Popen([dest_path, '/SILENT', '/SP-'], shell=True)
+            
+            # Delay mínimo para garantir que o processo do instalador iniciou
+            import time
+            time.sleep(0.5)
+            os._exit(0)
+        else:
+            return {"error": "Falha crítica no download do instalador."}
+    except Exception as e:
+        return {"error": str(e)}
+
 def iniciar_app():
     eel.init('web')
     
