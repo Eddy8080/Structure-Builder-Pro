@@ -23,7 +23,7 @@ from version_control import VersionManager
 # Inicializa o Motor
 engine = FolderEngine()
 # Inicializa o Gestor de Versões
-version_manager = VersionManager("edilsonmonteiro", "StructureBuilderPro")
+version_manager = VersionManager("Eddy8080", "Structure-Builder-Pro")
 
 
 # Função para localizar recursos (necessário para PyInstaller)
