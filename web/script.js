@@ -21,7 +21,70 @@ document.addEventListener('DOMContentLoaded', () => {
     inicializarTema();
     restaurarMirroringState();
     configurarEventosMirror(); 
+    verificarAtualizacaoSilenciosa(); // Engenharia Sênior: Verificação na inicialização
 });
+
+async function verificarAtualizacaoSilenciosa() {
+    try {
+        const res = await eel.verificar_atualizacao_disponivel()();
+        if (res && res.has_update) {
+            const btn = document.getElementById('btn-check-update');
+            if (btn) btn.classList.add('update-available');
+        }
+    } catch (e) { console.error("Erro na verificação silenciosa:", e); }
+}
+
+async function executarVerificacaoManual() {
+    mostrarLoader("Consultando servidor...");
+    try {
+        const res = await eel.verificar_atualizacao_disponivel()();
+        esconderLoader();
+        
+        if (res.error) {
+            alertar("Aviso", "Não foi possível conectar ao servidor de atualizações.", 'warning');
+            return;
+        }
+
+        if (res.has_update) {
+            const btn = document.getElementById('btn-check-update');
+            if (btn) btn.classList.add('update-available');
+
+            const confirm = await Swal.fire({
+                title: 'Nova Atualização!',
+                html: `
+                    <div style="text-align: left; background: rgba(0,0,0,0.2); padding: 15px; border-radius: 8px; margin-top: 10px;">
+                        <p><b>Versão disponível:</b> <span style="color: #fbbf24">${res.remote_version}</span></p>
+                        <p><b>Sua versão:</b> ${res.local_version}</p>
+                        <hr style="border: 0; border-top: 1px solid rgba(255,255,255,0.1); margin: 10px 0;">
+                        <p style="font-size: 0.9rem; color: #94a3b8">${res.changelog}</p>
+                    </div>
+                    <p style="margin-top: 15px;">Deseja aplicar as melhorias agora?</p>
+                `,
+                icon: 'info',
+                showCancelButton: true,
+                confirmButtonText: 'Sim, Atualizar',
+                cancelButtonText: 'Agora não',
+                confirmButtonColor: '#10b981',
+                cancelButtonColor: '#64748b',
+                background: document.body.classList.contains('light-theme') ? '#ffffff' : '#1e293b',
+                color: document.body.classList.contains('light-theme') ? '#1e293b' : '#f1f5f9'
+            });
+
+            if (confirm.isConfirmed) {
+                alertar("Aguarde", "O download do instalador iniciará em segundo plano. O programa será reiniciado ao concluir.", "success");
+            }
+        } else {
+            const btn = document.getElementById('btn-check-update');
+            if (btn) btn.classList.remove('update-available');
+            
+            const msg = res.info || 'Você já está na versão mais recente!';
+            Toast.fire({ icon: 'success', title: msg });
+        }
+    } catch (e) {
+        esconderLoader();
+        alertar("Erro", "Falha na comunicação com o motor de atualização.", 'error');
+    }
+}
 
 function sincronizarCamposDaTela() {
     state.mainFolder = document.getElementById('main-folder').value.trim();
@@ -164,6 +227,7 @@ function configurarEventos() {
 
     document.getElementById('btn-create').onclick = () => executarAcaoFinal();
     document.getElementById('btn-update').onclick = () => executarAcaoFinal();
+    document.getElementById('btn-check-update').onclick = executarVerificacaoManual;
     document.getElementById('btn-manual').onclick = async () => eel.abrir_manual()();
     document.getElementById('btn-clear').onclick = async () => { if (await confirmar("Limpar", "Reiniciar?")) resetarUI(); };
 

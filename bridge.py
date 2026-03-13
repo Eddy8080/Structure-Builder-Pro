@@ -18,9 +18,13 @@ import json
 import signal 
 import webbrowser
 from folder_engine import FolderEngine
+from version_control import VersionManager
 
 # Inicializa o Motor
 engine = FolderEngine()
+# Inicializa o Gestor de Versões
+version_manager = VersionManager("edilsonmonteiro", "StructureBuilderPro")
+
 
 # Função para localizar recursos (necessário para PyInstaller)
 def resource_path(relative_path):
@@ -276,6 +280,19 @@ def confirmar_remocoes(lista_pastas):
         return {"status": "success"} if resultado is True else {"error": resultado}
     except Exception as e:
         return {"error": str(e)}
+
+@eel.expose
+def verificar_atualizacao_disponivel():
+    """Consulta o GitHub e retorna o status para o Frontend."""
+    try:
+        return version_manager.check_for_updates()
+    except Exception as e:
+        return {"error": str(e)}
+
+@eel.expose
+def obter_informacoes_locais():
+    """Retorna a versão instalada no momento."""
+    return version_manager.get_local_info()
 
 def iniciar_app():
     eel.init('web')

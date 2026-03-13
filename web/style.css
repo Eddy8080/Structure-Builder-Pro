@@ -966,3 +966,17 @@ button[id="btn-confirm-main"]:hover {
 .mirror-root-item { font-weight: 700; color: var(--text-primary); padding: 10px; background: rgba(251, 191, 36, 0.05); border-radius: 8px; }
 
 .drop-target { background: rgba(59, 130, 246, 0.2) !important; border: 2px dashed var(--accent-color) !important; }
+
+/* Notificação de Atualização Automática - Engenharia Sênior */
+#btn-check-update.update-available {
+    background: rgba(251, 191, 36, 0.15) !important;
+    border: 1px solid #fbbf24 !important;
+    color: #fbbf24 !important;
+    animation: pulse-update 2s infinite;
+}
+
+@keyframes pulse-update {
+    0% { box-shadow: 0 0 0 0 rgba(251, 191, 36, 0.4); }
+    70% { box-shadow: 0 0 0 10px rgba(251, 191, 36, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(251, 191, 36, 0); }
+}
