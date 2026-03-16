@@ -24,14 +24,18 @@ document.addEventListener('DOMContentLoaded', () => {
     verificarAtualizacaoSilenciosa(); // Engenharia Sênior: Verificação na inicialização
 });
 
-async function verificarAtualizacaoSilenciosa() {
-    try {
-        const res = await eel.verificar_atualizacao_disponivel()();
-        if (res && res.has_update) {
-            const btn = document.getElementById('btn-check-update');
-            if (btn) btn.classList.add('update-available');
-        }
-    } catch (e) { console.error("Erro na verificação silenciosa:", e); }
+/**
+ * Módulo de Atualização - Engenharia Sênior
+ */
+
+eel.expose(atualizar_progresso_download);
+function atualizar_progresso_download(porcentagem) {
+    const progressBar = document.getElementById('update-progress-bar');
+    const progressText = document.getElementById('update-progress-text');
+    if (progressBar && progressText) {
+        progressBar.style.width = `${porcentagem}%`;
+        progressText.innerText = `${porcentagem}%`;
+    }
 }
 
 async function executarVerificacaoManual() {
@@ -58,7 +62,7 @@ async function executarVerificacaoManual() {
                         <hr style="border: 0; border-top: 1px solid rgba(255,255,255,0.1); margin: 10px 0;">
                         <p style="font-size: 0.9rem; color: #94a3b8">${res.changelog}</p>
                     </div>
-                    <p style="margin-top: 15px;">Deseja aplicar as melhorias agora?</p>
+                    <p style="margin-top: 15px;">Deseja baixar e instalar agora?</p>
                 `,
                 icon: 'info',
                 showCancelButton: true,
@@ -71,20 +75,37 @@ async function executarVerificacaoManual() {
             });
 
             if (confirm.isConfirmed) {
-                mostrarLoader("Baixando atualização...");
-                // Busca o executável nos assets da release do GitHub
-                const assetExe = res.assets.find(a => a.name.endsWith('.exe'));
-                if (assetExe) {
-                    const downloadUrl = assetExe.browser_download_url;
-                    const resUpdate = await eel.executar_download_e_atualizar(downloadUrl)();
-                    if (resUpdate && resUpdate.error) {
-                        esconderLoader();
-                        alertar("Erro no Update", resUpdate.error, 'error');
+                // Inicia o processo de download com barra de progresso customizada
+                Swal.fire({
+                    title: 'Baixando Atualização...',
+                    html: `
+                        <div style="margin-top: 20px;">
+                            <div style="width: 100%; background: rgba(255,255,255,0.1); height: 20px; border-radius: 10px; overflow: hidden;">
+                                <div id="update-progress-bar" style="width: 0%; background: #10b981; height: 100%; transition: width 0.3s ease;"></div>
+                            </div>
+                            <p id="update-progress-text" style="margin-top: 10px; font-weight: bold; color: #10b981;">0%</p>
+                            <p style="font-size: 0.8rem; color: #94a3b8; margin-top: 5px;">O instalador será aberto automaticamente ao finalizar.</p>
+                        </div>
+                    `,
+                    showConfirmButton: false,
+                    allowOutsideClick: false,
+                    background: document.body.classList.contains('light-theme') ? '#ffffff' : '#1e293b',
+                    color: document.body.classList.contains('light-theme') ? '#1e293b' : '#f1f5f9',
+                    didOpen: async () => {
+                        const assetExe = res.assets.find(a => a.name.endsWith('.exe'));
+                        if (assetExe) {
+                            const downloadUrl = assetExe.browser_download_url;
+                            const resUpdate = await eel.executar_download_e_atualizar(downloadUrl)();
+                            if (resUpdate && resUpdate.error) {
+                                Swal.close();
+                                alertar("Erro no Update", resUpdate.error, 'error');
+                            }
+                        } else {
+                            Swal.close();
+                            alertar("Erro", "Arquivo executável não encontrado no GitHub.", 'error');
+                        }
                     }
-                } else {
-                    esconderLoader();
-                    alertar("Erro", "Arquivo executável não encontrado no GitHub.", 'error');
-                }
+                });
             }
         } else {
             const btn = document.getElementById('btn-check-update');

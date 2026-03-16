@@ -297,8 +297,8 @@ def obter_informacoes_locais():
 @eel.expose
 def executar_download_e_atualizar(url_download):
     """
-    Realiza o download do instalador e inicia o processo de substituição.
-    Pilar Técnico: Fluxo do Instalador (Hot-Swap).
+    Realiza o download do instalador com barra de progresso e inicia o processo de substituição.
+    Pilar Técnico: Fluxo do Instalador com Feedback Visual.
     """
     import tempfile
     
@@ -306,13 +306,17 @@ def executar_download_e_atualizar(url_download):
         temp_dir = tempfile.gettempdir()
         dest_path = os.path.join(temp_dir, "StructureBuilderPro_Update.exe")
         
-        # Realiza o download físico
-        sucesso = version_manager.download_installer(url_download, dest_path)
+        # Callback para atualizar o frontend em tempo real
+        def progresso_callback(percent):
+            eel.atualizar_progresso_download(round(percent, 1))
+        
+        # Realiza o download físico com progresso
+        sucesso = version_manager.download_installer(url_download, dest_path, progress_callback=progresso_callback)
         
         if sucesso:
             # Engenharia Sênior: Disparo do novo instalador e fechamento do app atual
-            # O instalador do Inno Setup cuidará da substituição dos arquivos
-            subprocess.Popen([dest_path, '/SILENT', '/SP-'], shell=True)
+            # Removemos /SILENT para que o usuário possa interagir com a tela de instalação
+            subprocess.Popen([dest_path], shell=True)
             
             # Delay mínimo para garantir que o processo do instalador iniciou
             import time

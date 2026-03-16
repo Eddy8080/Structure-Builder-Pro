@@ -4,7 +4,7 @@
 [Setup]
 AppId={{google.structure.builder.pro.2.0}}
 AppName=Structure Builder Pro
-AppVersion=2.0
+AppVersion=5.6.1
 AppPublisher=Edilson Monteiro
 DefaultDirName={autopf}\StructureBuilderPro
 DefaultGroupName=Structure Builder Pro
