@@ -25,14 +25,21 @@ def finalizar_processos_antigos():
             # Tenta fechar de forma limpa primeiro, depois força se necessário
             subprocess.run(['taskkill', '/F', '/IM', 'StructureBuilderPro.exe', '/T'], 
                            capture_output=True, creationflags=subprocess.CREATE_NO_WINDOW)
+            # Também fecha o console de Python se estiver rodando em modo dev
+            subprocess.run(['taskkill', '/F', '/IM', 'python.exe', '/T'], 
+                           capture_output=True, creationflags=subprocess.CREATE_NO_WINDOW)
         except:
             pass
 
-def iniciar_confirmacao_visual(installer_path):
+def executar_instalacao_direta(installer_path):
+    """
+    Modo Sênior: Executa a instalação sem perguntas redundantes,
+    mostrando apenas um feedback visual de progresso.
+    """
     try:
         root = tk.Tk()
-        root.title("Structure Builder Pro - Atualização")
-        root.geometry("450x220")
+        root.title("Preparando Atualização")
+        root.geometry("400x120")
         root.resizable(False, False)
         root.configure(bg="#1e293b")
         root.attributes("-topmost", True)
@@ -42,66 +49,57 @@ def iniciar_confirmacao_visual(installer_path):
             try: root.iconbitmap(icon_path)
             except: pass
 
-        sw = root.winfo_screenwidth()
-        sh = root.winfo_screenheight()
-        x = (sw // 2) - (450 // 2)
-        y = (sh // 2) - (220 // 2)
-        root.geometry(f"+{x}+{y}")
+        # Centraliza na tela
+        sw, sh = root.winfo_screenwidth(), root.winfo_screenheight()
+        root.geometry(f"+{(sw//2)-200}+{(sh//2)-60}")
 
-        tk.Label(root, text="Download Concluído!", font=("Inter", 14, "bold"), fg="#10b981", bg="#1e293b", pady=15).pack()
+        tk.Label(root, text="Limpando ambiente e iniciando instalador...", 
+                 font=("Inter", 10), fg="#f1f5f9", bg="#1e293b", pady=20).pack()
         
-        msg = "O instalador da nova versão está pronto.\n\nDeseja fechar o programa e iniciar a instalação agora?"
-        tk.Label(root, text=msg, font=("Inter", 10), fg="#f1f5f9", bg="#1e293b", wraplength=400, justify="center").pack(pady=10)
+        # Barra de progresso fake apenas para feedback visual
+        canvas = tk.Canvas(root, width=300, height=10, bg="#0f172a", highlightthickness=0)
+        canvas.pack(pady=5)
+        bar = canvas.create_rectangle(0, 0, 0, 10, fill="#10b981", outline="")
 
-        btn_frame = tk.Frame(root, bg="#1e293b")
-        btn_frame.pack(pady=20)
+        def step(n):
+            if n <= 300:
+                canvas.coords(bar, 0, 0, n, 10)
+                if n == 150: # No meio do caminho, limpa os processos
+                    finalizar_processos_antigos()
+                root.after(10, lambda: step(n + 5))
+            else:
+                try:
+                    os.startfile(installer_path)
+                    root.destroy()
+                    sys.exit(0)
+                except Exception as e:
+                    tkinter.messagebox.showerror("Erro Crítico", f"Falha ao abrir instalador:\n{str(e)}")
+                    root.destroy()
+                    sys.exit(1)
 
-        def on_confirm():
-            # Fecha a janela ANTES de disparar
-            root.withdraw() 
-            try:
-                # Engenharia Sênior: Garante que o processo principal morreu antes de chamar o instalador
-                finalizar_processos_antigos()
-                time.sleep(0.5)
-                
-                os.startfile(installer_path)
-                root.destroy()
-                sys.exit(0)
-            except Exception as e:
-                tkinter.messagebox.showerror("Erro Crítico", f"Falha ao abrir instalador:\n{str(e)}")
-                root.destroy()
-                sys.exit(1)
-
-        def on_cancel():
-            root.destroy()
-            sys.exit(0)
-
-        tk.Button(btn_frame, text="Sim, Instalar Agora", font=("Inter", 10, "bold"), 
-                  fg="#ffffff", bg="#10b981", padx=20, pady=5, border=0, cursor="hand2", command=on_confirm).pack(side="left", padx=10)
-
-        tk.Button(btn_frame, text="Cancelar", font=("Inter", 10), 
-                  fg="#ffffff", bg="#64748b", padx=20, pady=5, border=0, cursor="hand2", command=on_cancel).pack(side="left", padx=10)
-
+        root.after(500, lambda: step(0))
         root.mainloop()
+
     except Exception as e:
         finalizar_processos_antigos()
         os.startfile(installer_path)
         sys.exit(0)
 
 def main():
-    # O sidecar recebe o caminho do instalador como argumento
     if len(sys.argv) < 2:
         sys.exit(1)
 
     installer_path = os.path.abspath(sys.argv[1])
     
-    # Aguarda o bridge encerrar graciosamente por 2 segundos
-    time.sleep(2.0)
+    # Aguarda o bridge encerrar graciosamente por 1 segundo
+    time.sleep(1.0)
 
     if not os.path.exists(installer_path):
         sys.exit(1)
 
-    iniciar_confirmacao_visual(installer_path)
+    # Agora o Sidecar assume que se foi chamado pelo bridge, 
+    # a confirmação já foi feita na Web.
+    executar_instalacao_direta(installer_path)
 
 if __name__ == "__main__":
     main()

@@ -326,26 +326,43 @@ def executar_download_e_atualizar(url_download):
         sucesso = version_manager.download_installer(url_download, dest_path, progress_callback=progresso_callback)
         
         if sucesso:
-            print("[UPDATE] Download íntegro. Disparando Sidecar...")
-            
-            # Engenharia Sênior: Garante que o Sidecar receba o caminho entre aspas se houver espaços
-            if getattr(sys, 'frozen', False):
-                sidecar_path = resource_path("updater_sidecar.exe")
-                # Usa Popen para desvincular o processo pai do filho
-                subprocess.Popen([sidecar_path, dest_path], shell=False, 
-                                 creationflags=subprocess.CREATE_NEW_PROCESS_GROUP)
-            else:
-                sidecar_script = os.path.abspath("updater_sidecar.py")
-                subprocess.Popen([sys.executable, sidecar_script, dest_path], shell=False,
-                                 creationflags=subprocess.CREATE_NEW_PROCESS_GROUP)
-            
-            # Encerramento imediato e total para liberar o executável original
-            print("[UPDATE] Encerrando processo principal para instalação.")
-            os._exit(0)
+            print(f"[UPDATE] Download concluído com sucesso em: {dest_path}")
+            return {"success": True, "installer_path": dest_path}
         else:
             return {"error": "Falha no download. Verifique sua conexão."}
     except Exception as e:
         print(f"[UPDATE] Erro Crítico: {e}")
+        return {"error": str(e)}
+
+@eel.expose
+def finalizar_e_instalar(installer_path):
+    """
+    Acionado pelo Frontend após confirmação do usuário.
+    Inicia o Sidecar e agenda o fechamento do app para permitir que o JS feche a janela.
+    """
+    try:
+        print("[UPDATE] Iniciando processo final de instalação...")
+        
+        if getattr(sys, 'frozen', False):
+            sidecar_path = resource_path("updater_sidecar.exe")
+            subprocess.Popen([sidecar_path, installer_path], shell=False, 
+                             creationflags=subprocess.CREATE_NEW_PROCESS_GROUP)
+        else:
+            sidecar_script = os.path.abspath("updater_sidecar.py")
+            subprocess.Popen([sys.executable, sidecar_script, installer_path], shell=False,
+                             creationflags=subprocess.CREATE_NEW_PROCESS_GROUP)
+        
+        # Encerramento diferido para dar tempo ao Eel/JS de processar o window.close()
+        import threading
+        def delayed_exit():
+            import time
+            time.sleep(1.0)
+            os._exit(0)
+            
+        threading.Thread(target=delayed_exit, daemon=True).start()
+        return True
+    except Exception as e:
+        print(f"[UPDATE] Erro ao disparar sidecar: {e}")
         return {"error": str(e)}
 
 def iniciar_app():

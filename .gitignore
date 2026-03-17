@@ -1,5 +1,5 @@
 # Byte-compiled / optimized / DLL files
-__pycache__/
+**/__pycache__/
 *.py[cod]
 *$py.class
 
@@ -27,15 +27,18 @@ share/python-wheels/
 MANIFEST
 
 # PyInstaller
-#  Usually these files are written by a python script, before PyInstaller builds the exe, so as to inject date/other infos into it.
 *.manifest
 *.spec
 
-# Installer logs
-pip-log.txt
-pip-delete-this-directory.txt
-
 # Unit test / coverage reports
+test_*.py
+testar_*.py
+validar_*.py
+homologacao_*.py
+stress_test_*.py
+reproduzir_bug_*.py
+verificar_*.py
+teste_*.py
 htmlcov/
 .tox/
 .nox/
@@ -49,6 +52,15 @@ coverage.xml
 .hypothesistest/
 .pytest_cache/
 pytestdebuglog.txt
+
+# Project Specific Build Artifacts
+output_installer/
+*.exe
+*.msi
+*.zip
+*.rar
+*.log
+atualizacao.automatico.md
 
 # Translations
 *.mo

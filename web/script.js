@@ -1,5 +1,5 @@
 /**
- * Engine v3.4 - Desacoplado v5.6.2
+ * Engine v3.7 - Desacoplado v5.6.2
  */
 
 let state = {
@@ -127,8 +127,35 @@ async function executarVerificacaoManual() {
                             if (resUpdate && resUpdate.error) {
                                 Swal.close();
                                 alertar("Erro no Update", resUpdate.error, 'error');
+                                return;
                             }
-                            // Nota: Se sucesso, o Python fechará a aplicação e abrirá o sidecar nativo automaticamente.
+
+                            if (resUpdate && resUpdate.success) {
+                                // Download concluído com sucesso. Pergunta ao usuário se quer instalar agora.
+                                const finalConfirm = await Swal.fire({
+                                    title: 'Download Concluído!',
+                                    text: 'O instalador está pronto. Deseja fechar o programa e iniciar a instalação agora?',
+                                    icon: 'success',
+                                    showCancelButton: true,
+                                    confirmButtonText: 'Sim, Instalar Agora',
+                                    cancelButtonText: 'Agora não',
+                                    confirmButtonColor: '#10b981',
+                                    cancelButtonColor: '#64748b',
+                                    allowOutsideClick: false,
+                                    background: document.body.classList.contains('light-theme') ? '#ffffff' : '#1e293b',
+                                    color: document.body.classList.contains('light-theme') ? '#1e293b' : '#f1f5f9'
+                                });
+
+                                if (finalConfirm.isConfirmed) {
+                                    // Chamada final para preparar o Sidecar
+                                    await eel.finalizar_e_instalar(resUpdate.installer_path)();
+                                    // Fecha a janela imediatamente após o comando ser enviado ao Python
+                                    window.close();
+                                } else {
+                                    // Usuário escolheu "Não". Apenas fecha o modal e volta ao trabalho.
+                                    Toast.fire({ icon: 'info', title: 'Instalação adiada. Você pode atualizar mais tarde.' });
+                                }
+                            }
                         } else {
                             Swal.close();
                             alertar("Erro", "Arquivo executável não encontrado no GitHub.", 'error');
