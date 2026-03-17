@@ -3,12 +3,24 @@ import os
 import sys
 
 # Identificador único para a barra de tarefas do Windows (AppUserModelID)
-# Deve ser definido o mais cedo possível para que o ícone seja associado corretamente
 myappid = 'google.structure.builder.pro.2.0' 
 try:
     ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
 except Exception:
     pass
+
+# Engenharia Sênior: Isolamento de Diretório Base
+# Garante que o programa sempre opere em seu diretório de instalação ou de script,
+# impedindo contaminação entre a versão instalada e a pasta do projeto.
+if getattr(sys, 'frozen', False):
+    # Ambiente Executável: Força o contexto para a pasta onde o .exe está
+    base_dir_context = os.path.dirname(sys.executable)
+else:
+    # Ambiente Desenvolvimento: Força o contexto para a pasta do script bridge.py
+    base_dir_context = os.path.dirname(os.path.abspath(__file__))
+
+os.chdir(base_dir_context)
+print(f"Contexto de execução isolado em: {os.getcwd()}")
 
 import eel
 import tkinter as tk
@@ -297,34 +309,43 @@ def obter_informacoes_locais():
 @eel.expose
 def executar_download_e_atualizar(url_download):
     """
-    Realiza o download do instalador com barra de progresso e inicia o processo de substituição.
-    Pilar Técnico: Fluxo do Instalador com Feedback Visual.
+    Fluxo Sênior com Sidecar: 
+    1. Faz o download para pasta Temp.
+    2. Dispara o vigilante (Sidecar) para gerenciar o fechamento e instalação.
+    3. Suicida o processo principal.
     """
     import tempfile
-    
     try:
-        temp_dir = tempfile.gettempdir()
-        dest_path = os.path.join(temp_dir, "StructureBuilderPro_Update.exe")
+        # Caminho absoluto e normalizado no Temp do Windows
+        dest_path = os.path.normpath(os.path.join(tempfile.gettempdir(), "StructureBuilderPro_Update.exe"))
         
-        # Callback para atualizar o frontend em tempo real
         def progresso_callback(percent):
             eel.atualizar_progresso_download(round(percent, 1))
         
-        # Realiza o download físico com progresso
+        print(f"[UPDATE] Iniciando download: {dest_path}")
         sucesso = version_manager.download_installer(url_download, dest_path, progress_callback=progresso_callback)
         
         if sucesso:
-            # Engenharia Sênior: Disparo do novo instalador e fechamento do app atual
-            # Removemos /SILENT para que o usuário possa interagir com a tela de instalação
-            subprocess.Popen([dest_path], shell=True)
+            print("[UPDATE] Download íntegro. Disparando Sidecar...")
             
-            # Delay mínimo para garantir que o processo do instalador iniciou
-            import time
-            time.sleep(0.5)
+            # Engenharia Sênior: Garante que o Sidecar receba o caminho entre aspas se houver espaços
+            if getattr(sys, 'frozen', False):
+                sidecar_path = resource_path("updater_sidecar.exe")
+                # Usa Popen para desvincular o processo pai do filho
+                subprocess.Popen([sidecar_path, dest_path], shell=False, 
+                                 creationflags=subprocess.CREATE_NEW_PROCESS_GROUP)
+            else:
+                sidecar_script = os.path.abspath("updater_sidecar.py")
+                subprocess.Popen([sys.executable, sidecar_script, dest_path], shell=False,
+                                 creationflags=subprocess.CREATE_NEW_PROCESS_GROUP)
+            
+            # Encerramento imediato e total para liberar o executável original
+            print("[UPDATE] Encerrando processo principal para instalação.")
             os._exit(0)
         else:
-            return {"error": "Falha crítica no download do instalador."}
+            return {"error": "Falha no download. Verifique sua conexão."}
     except Exception as e:
+        print(f"[UPDATE] Erro Crítico: {e}")
         return {"error": str(e)}
 
 def iniciar_app():

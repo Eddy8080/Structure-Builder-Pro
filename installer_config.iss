@@ -6,9 +6,14 @@ AppId={{google.structure.builder.pro.2.0}}
 AppName=Structure Builder Pro
 AppVersion=5.6.2
 AppPublisher=Edilson Monteiro
+AppMutex=google.structure.builder.pro.2.0
 DefaultDirName={autopf}\StructureBuilderPro
 DefaultGroupName=Structure Builder Pro
 AllowNoIcons=yes
+; Fecha a aplicação automaticamente se estiver aberta
+CloseApplications=yes
+; Tenta reiniciar a aplicação se necessário
+RestartApplications=yes
 ; Ícone do instalador e do desinstalador
 SetupIconFile=logo.ico
 UninstallDisplayIcon={app}\StructureBuilderPro.exe
@@ -16,6 +21,7 @@ Compression=lzma
 SolidCompression=yes
 WizardStyle=modern
 OutputDir=output_installer
+OutputBaseFilename=StructureBuilderPro_Setup_v5.6.2
 
 [Languages]
 Name: "brazilianportuguese"; MessagesFile: "compiler:Languages\BrazilianPortuguese.isl"

@@ -1,5 +1,5 @@
 /**
- * Script Principal de Interface v5.3 - Registry-Based Workspace
+ * Engine v3.4 - Desacoplado v5.6.2
  */
 
 let state = {
@@ -38,6 +38,33 @@ function atualizar_progresso_download(porcentagem) {
     }
 }
 
+eel.expose(confirmar_instalacao);
+async function confirmar_instalacao() {
+    const isLight = document.body.classList.contains('light-theme');
+    
+    // Fecha o modal de progresso anterior
+    Swal.close();
+    
+    // Pequeno delay para garantir que o DOM limpou o modal anterior
+    await new Promise(resolve => setTimeout(resolve, 200));
+
+    const result = await Swal.fire({
+        title: 'Download Concluído!',
+        text: 'O instalador está pronto. Deseja fechar o programa e iniciar a instalação agora?',
+        icon: 'success',
+        showCancelButton: true,
+        confirmButtonColor: '#10b981',
+        cancelButtonColor: '#64748b',
+        confirmButtonText: 'Sim, Instalar Agora',
+        cancelButtonText: 'Cancelar',
+        background: isLight ? '#ffffff' : '#1e293b',
+        color: isLight ? '#1e293b' : '#f1f5f9',
+        allowOutsideClick: false // Impede fechar clicando fora para garantir a resposta ao Python
+    });
+
+    return result.isConfirmed;
+}
+
 async function executarVerificacaoManual() {
     mostrarLoader("Consultando servidor...");
     try {
@@ -58,9 +85,9 @@ async function executarVerificacaoManual() {
                 html: `
                     <div style="text-align: left; background: rgba(0,0,0,0.2); padding: 15px; border-radius: 8px; margin-top: 10px;">
                         <p><b>Versão disponível:</b> <span style="color: #fbbf24">${res.remote_version}</span></p>
-                        <p><b>Sua versão:</b> ${res.local_version}</p>
+                        <p><b>Sua versão atual:</b> <span style="color: #94a3b8">${res.local_version}</span></p>
                         <hr style="border: 0; border-top: 1px solid rgba(255,255,255,0.1); margin: 10px 0;">
-                        <p style="font-size: 0.9rem; color: #94a3b8">${res.changelog}</p>
+                        <p style="font-size: 0.9rem; color: #94a3b8">${res.changelog || 'Melhorias de estabilidade e novas funcionalidades.'}</p>
                     </div>
                     <p style="margin-top: 15px;">Deseja baixar e instalar agora?</p>
                 `,
@@ -96,10 +123,12 @@ async function executarVerificacaoManual() {
                         if (assetExe) {
                             const downloadUrl = assetExe.browser_download_url;
                             const resUpdate = await eel.executar_download_e_atualizar(downloadUrl)();
+                            
                             if (resUpdate && resUpdate.error) {
                                 Swal.close();
                                 alertar("Erro no Update", resUpdate.error, 'error');
                             }
+                            // Nota: Se sucesso, o Python fechará a aplicação e abrirá o sidecar nativo automaticamente.
                         } else {
                             Swal.close();
                             alertar("Erro", "Arquivo executável não encontrado no GitHub.", 'error');
