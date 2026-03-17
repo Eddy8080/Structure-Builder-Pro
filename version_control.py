@@ -1,4 +1,5 @@
 import os
+import sys
 import json
 import hashlib
 import requests
@@ -6,26 +7,56 @@ from datetime import datetime
 
 class VersionManager:
     """
-    Motor de Atualização Universal v1.0
+    Motor de Atualização Universal v1.2
     Arquitetura Sênior: Desacoplada, Resiliente e Segura.
     """
     
     def __init__(self, repo_owner, repo_name, current_version_file="version.json"):
         self.repo_owner = repo_owner
         self.repo_name = repo_name
-        self.version_file = current_version_file
+        self.version_filename = current_version_file
         self.api_url = f"https://api.github.com/repos/{repo_owner}/{repo_name}/releases/latest"
-        self.timeout = 10 # Segundos para timeout de rede
+        self.timeout = 10 
+        
+        # Engenharia Sênior: Fallback Hardcoded (Última linha de defesa)
+        # Se todos os arquivos sumirem, o sistema reportará esta versão em vez de 0.0.0
+        self.FALLBACK_VERSION = "5.6.2" 
 
     def get_local_info(self):
-        """Retorna o dicionário completo da versão local."""
-        try:
-            if os.path.exists(self.version_file):
-                with open(self.version_file, "r", encoding="utf-8") as f:
-                    return json.load(f)
-            return {"version": "0.0.0"}
-        except Exception:
-            return {"version": "0.0.0"}
+        """
+        Lógica de Tripla Verificação (Triple Check):
+        Garante a leitura da versão em qualquer cenário de build (Auto ou Manual).
+        """
+        possible_paths = []
+        
+        # VERIFICAÇÃO 1: Recurso Interno (PyInstaller Bundled)
+        # Quando você usa --add-data, o arquivo vai para a pasta temporária _MEIPASS
+        if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
+            possible_paths.append(os.path.join(sys._MEIPASS, self.version_filename))
+            
+        # VERIFICAÇÃO 2: Pasta do Executável (Externo)
+        # Caso o arquivo tenha sido copiado manualmente para a pasta do .exe
+        if getattr(sys, 'frozen', False):
+            possible_paths.append(os.path.join(os.path.dirname(sys.executable), self.version_filename))
+        
+        # VERIFICAÇÃO 3: Pasta de Desenvolvimento (Script)
+        # Caminho padrão para quando você roda via terminal (python bridge.py)
+        possible_paths.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), self.version_filename))
+
+        # Tenta ler de cada caminho possível até encontrar um válido
+        for path in possible_paths:
+            try:
+                if os.path.exists(path):
+                    with open(path, "r", encoding="utf-8") as f:
+                        data = json.load(f)
+                        if data and "version" in data:
+                            return data
+            except Exception:
+                continue
+
+        # Se todas as verificações falharem (arquivo deletado/corrompido),
+        # retorna a versão de segurança para NUNCA exibir 0.0.0
+        return {"version": self.FALLBACK_VERSION}
 
     def check_for_updates(self):
         """
@@ -41,8 +72,11 @@ class VersionManager:
                 remote_version = data.get("tag_name", "").replace("v", "").strip()
                 local_version = self.get_local_info().get("version", "0.0.0").strip()
                 
-                # Engenharia Sênior: Comparação de versão
-                has_update = remote_version != local_version
+                # Engenharia Sênior: Lógica de Atualização Permissiva
+                # Permitimos que o ciclo de update continue (has_update = True) 
+                # sempre que houver uma versão remota válida. Isso permite que o usuário
+                # force uma reinstalação para obter hotfixes ou correções de integridade.
+                has_update = True if remote_version else False
                 
                 return {
                     "has_update": has_update,

@@ -3,7 +3,8 @@ import os
 import sys
 
 # Identificador único para a barra de tarefas do Windows (AppUserModelID)
-myappid = 'google.structure.builder.pro.2.0' 
+# Sincronizado com o instalador para garantir a identidade visual única do projeto.
+myappid = 'Anagma.StructureBuilderPro.v5' 
 try:
     ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
 except Exception:
@@ -31,12 +32,75 @@ import signal
 import webbrowser
 from folder_engine import FolderEngine
 from version_control import VersionManager
+from window_manager import iniciar_monitoramento_janela
 
 # Inicializa o Motor
 engine = FolderEngine()
 # Inicializa o Gestor de Versões
 version_manager = VersionManager("Eddy8080", "Structure-Builder-Pro")
 
+# Engenharia Sênior: Lógica de Suporte ao Modo Sidecar (Executável Único)
+def finalizar_processos_antigos_sidecar():
+    if os.name == 'nt':
+        try:
+            # Mata o executável principal para liberar o arquivo para o instalador
+            subprocess.run(['taskkill', '/F', '/IM', 'StructureBuilderPro.exe', '/T'], 
+                           capture_output=True, creationflags=subprocess.CREATE_NO_WINDOW)
+        except:
+            pass
+    import time
+    time.sleep(0.5)
+
+def executar_logica_sidecar(installer_path):
+    """Feedback visual e execução do instalador (Integrado no Executável Único)."""
+    import tkinter as tk
+    from tkinter import messagebox
+    import time
+    
+    try:
+        root = tk.Tk()
+        root.title("Preparando Atualização")
+        root.geometry("400x120")
+        root.resizable(False, False)
+        root.configure(bg="#1e293b")
+        root.attributes("-topmost", True)
+
+        icon_path = resource_path("logo.ico")
+        if os.path.exists(icon_path):
+            try: root.iconbitmap(icon_path)
+            except: pass
+
+        sw, sh = root.winfo_screenwidth(), root.winfo_screenheight()
+        root.geometry(f"+{(sw//2)-200}+{(sh//2)-60}")
+
+        tk.Label(root, text="Limpando ambiente e iniciando instalador...", 
+                 font=("Inter", 10), fg="#f1f5f9", bg="#1e293b", pady=20).pack()
+        
+        canvas = tk.Canvas(root, width=300, height=10, bg="#0f172a", highlightthickness=0)
+        canvas.pack(pady=5)
+        bar = canvas.create_rectangle(0, 0, 0, 10, fill="#10b981", outline="")
+
+        def step(n):
+            if n <= 300:
+                canvas.coords(bar, 0, 0, n, 10)
+                if n == 150: finalizar_processos_antigos_sidecar()
+                root.after(10, lambda: step(n + 5))
+            else:
+                try:
+                    os.startfile(installer_path)
+                    root.destroy()
+                    os._exit(0)
+                except Exception as e:
+                    tk.messagebox.showerror("Erro Crítico", f"Falha ao abrir instalador:\n{str(e)}")
+                    root.destroy()
+                    os._exit(1)
+
+        root.after(500, lambda: step(0))
+        root.mainloop()
+    except Exception:
+        finalizar_processos_antigos_sidecar()
+        os.startfile(installer_path)
+        os._exit(0)
 
 # Função para localizar recursos (necessário para PyInstaller)
 def resource_path(relative_path):
@@ -338,21 +402,38 @@ def executar_download_e_atualizar(url_download):
 def finalizar_e_instalar(installer_path):
     """
     Acionado pelo Frontend após confirmação do usuário.
-    Inicia o Sidecar e agenda o fechamento do app para permitir que o JS feche a janela.
+    Inicia o PRÓPRIO executável em modo sidecar a partir de um local neutro.
     """
     try:
-        print("[UPDATE] Iniciando processo final de instalação...")
+        import shutil
+        import tempfile
+        print("[UPDATE] Preparando execução neutra do modo sidecar...")
         
         if getattr(sys, 'frozen', False):
-            sidecar_path = resource_path("updater_sidecar.exe")
-            subprocess.Popen([sidecar_path, installer_path], shell=False, 
-                             creationflags=subprocess.CREATE_NEW_PROCESS_GROUP)
+            # O próprio executável principal atua como sidecar
+            original_exe = sys.executable
+            
+            temp_dir = tempfile.gettempdir()
+            neutral_updater = os.path.join(temp_dir, "SBPro_Updater_Runner.exe")
+            
+            try:
+                # Cria uma cópia de escape do próprio EXE
+                shutil.copy2(original_exe, neutral_updater)
+                
+                # Executa a cópia com a flag de modo sidecar
+                subprocess.Popen([neutral_updater, "--sidecar-mode", installer_path], shell=False, 
+                                 creationflags=subprocess.CREATE_NEW_PROCESS_GROUP)
+            except Exception as e:
+                print(f"[UPDATE] Falha na cópia neutra, tentando fallback direto: {e}")
+                subprocess.Popen([original_exe, "--sidecar-mode", installer_path], shell=False, 
+                                 creationflags=subprocess.CREATE_NEW_PROCESS_GROUP)
         else:
-            sidecar_script = os.path.abspath("updater_sidecar.py")
-            subprocess.Popen([sys.executable, sidecar_script, installer_path], shell=False,
+            # Modo Desenvolvimento: roda o script principal com a flag
+            main_script = os.path.abspath(__file__)
+            subprocess.Popen([sys.executable, main_script, "--sidecar-mode", installer_path], shell=False,
                              creationflags=subprocess.CREATE_NEW_PROCESS_GROUP)
         
-        # Encerramento diferido para dar tempo ao Eel/JS de processar o window.close()
+        # Encerramento diferido para permitir que o JS execute window.close()
         import threading
         def delayed_exit():
             import time
@@ -362,19 +443,19 @@ def finalizar_e_instalar(installer_path):
         threading.Thread(target=delayed_exit, daemon=True).start()
         return True
     except Exception as e:
-        print(f"[UPDATE] Erro ao disparar sidecar: {e}")
+        print(f"[UPDATE] Erro Crítico ao disparar modo sidecar: {e}")
         return {"error": str(e)}
 
 def iniciar_app():
-    eel.init('web')
-    
-    # Obtém a resolução real da tela para garantir abertura em tela cheia
+    # Engenharia Sênior: Força a inicialização a partir do recurso embutido (_MEIPASS)
+    web_resource_path = resource_path('web')
+    eel.init(web_resource_path)
+
     try:
         root = tk.Tk()
         root.withdraw()
         sw = root.winfo_screenwidth()
         sh = root.winfo_screenheight()
-        # Define o ícone também na janela oculta que mede a tela (opcional)
         icon_path = resource_path("logo.ico")
         if os.path.exists(icon_path):
             try: root.iconbitmap(icon_path)
@@ -383,21 +464,44 @@ def iniciar_app():
     except:
         sw, sh = 1200, 800
 
-    # Usar port=0 permite que o sistema escolha automaticamente uma porta livre
+    # Engenharia Sênior: Isolamento de Perfil para Fixação Precisa de Ícone
+    user_data_dir = os.path.join(engine.app_data_dir, "SBPro_Profile")
+    if not os.path.exists(user_data_dir):
+        try: os.makedirs(user_data_dir, exist_ok=True)
+        except: pass
+
+    # Engenharia Sênior: Dispara o monitor de identidade visual
+    iniciar_monitoramento_janela()
+
     try:
-        # Abrimos com as dimensões totais da tela e o comando de maximização
-        eel.start('index.html', mode='chrome', port=0, size=(sw, sh), cmdline_args=['--start-maximized'])
+        # Abrimos em modo App com isolamento total de perfil e identidade vinculada
+        # Removidas flags redundantes para garantir estabilidade do processo gráfico
+        eel.start('index.html', 
+                  mode='chrome', 
+                  port=0, 
+                  size=(sw, sh), 
+                  cmdline_args=[
+                      '--start-maximized', 
+                      f'--app-id={myappid}',
+                      f'--user-data-dir={user_data_dir}',
+                      '--no-first-run',
+                      '--no-default-browser-check'
+                  ])
     except (SystemExit, MemoryError, KeyboardInterrupt):
         pass
     except EnvironmentError:
         try:
-            # Caso o Chrome não esteja disponível, abre no navegador padrão
             eel.start('index.html', mode='default', port=0, size=(sw, sh))
         except (SystemExit, MemoryError, KeyboardInterrupt):
             pass
 
 if __name__ == "__main__":
-    try:
-        iniciar_app()
-    except KeyboardInterrupt:
-        fechar_aplicacao(None, None)
+    # Verifica se o programa deve iniciar em modo de atualização (Sidecar)
+    if len(sys.argv) >= 3 and sys.argv[1] == "--sidecar-mode":
+        installer_path = sys.argv[2]
+        executar_logica_sidecar(installer_path)
+    else:
+        try:
+            iniciar_app()
+        except KeyboardInterrupt:
+            fechar_aplicacao(None, None)

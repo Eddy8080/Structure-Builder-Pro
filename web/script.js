@@ -1,5 +1,5 @@
 /**
- * Engine v3.7 - Desacoplado v5.6.2
+ * Engine v3.9 - Desacoplado v5.6.2
  */
 
 let state = {
@@ -84,8 +84,8 @@ async function executarVerificacaoManual() {
                 title: 'Nova Atualização!',
                 html: `
                     <div style="text-align: left; background: rgba(0,0,0,0.2); padding: 15px; border-radius: 8px; margin-top: 10px;">
-                        <p><b>Versão disponível:</b> <span style="color: #fbbf24">${res.remote_version}</span></p>
-                        <p><b>Sua versão atual:</b> <span style="color: #94a3b8">${res.local_version}</span></p>
+                        <p><b>Versão que está chegando (Servidor):</b> <span style="color: #fbbf24">${res.remote_version}</span></p>
+                        <p><b>Versão que está (Sua Máquina):</b> <span style="color: #94a3b8">${res.local_version}</span></p>
                         <hr style="border: 0; border-top: 1px solid rgba(255,255,255,0.1); margin: 10px 0;">
                         <p style="font-size: 0.9rem; color: #94a3b8">${res.changelog || 'Melhorias de estabilidade e novas funcionalidades.'}</p>
                     </div>

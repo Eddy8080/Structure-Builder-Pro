@@ -5,23 +5,14 @@ Write-Host "Iniciando processo de build..." -ForegroundColor Cyan
 if (Test-Path "dist") { Remove-Item -Recurse -Force "dist" }
 if (Test-Path "build") { Remove-Item -Recurse -Force "build" }
 
-# PASSO 1: Compilar o Sidecar de Atualização em um executável isolado
-Write-Host "Compilando Sidecar de Atualização..." -ForegroundColor Yellow
-pyinstaller --noconfirm --onefile --windowed `
-    --name "updater_sidecar" `
-    --icon "logo.ico" `
-    updater_sidecar.py
-
-# PASSO 2: Compilar a Aplicação Principal incluindo o executável do Sidecar
+# PASSO ÚNICO: Compilar a Aplicação Principal (Arquitetura Single EXE)
 Write-Host "Compilando Aplicação Principal..." -ForegroundColor Cyan
-# --add-data "dist/updater_sidecar.exe;." inclui o binário compilado
 pyinstaller --noconfirm --onefile --windowed `
     --name "StructureBuilderPro" `
     --icon "logo.ico" `
     --add-data "web;web" `
     --add-data "version.json;." `
     --add-data "manual.html;." `
-    --add-data "dist/updater_sidecar.exe;." `
     --collect-all "eel" `
     --collect-all "gevent" `
     --collect-all "gevent-websocket" `
@@ -36,7 +27,6 @@ if (Test-Path "dist\StructureBuilderPro.exe") {
     Write-Host "Tudo pronto para a criação manual do instalador via Inno Setup." -ForegroundColor Cyan
     Write-Host "O arquivo .iss já está configurado para gerar a saída em: output_installer" -ForegroundColor White
 }
-
 
 # Compilação do Instalador via Inno Setup
 Write-Host "Iniciando compilação do instalador (Inno Setup)..." -ForegroundColor Cyan

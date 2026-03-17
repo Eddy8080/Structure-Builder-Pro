@@ -2,11 +2,11 @@
 ; Desenvolvido para instalação profissional no Windows
 
 [Setup]
-AppId={{google.structure.builder.pro.2.0}}
+AppId=Anagma.StructureBuilderPro.v5
 AppName=Structure Builder Pro
 AppVersion=5.6.2
 AppPublisher=Edilson Monteiro
-AppMutex=google.structure.builder.pro.2.0
+AppMutex=Anagma.StructureBuilderPro.v5
 DefaultDirName={autopf}\StructureBuilderPro
 DefaultGroupName=Structure Builder Pro
 AllowNoIcons=yes
@@ -38,10 +38,21 @@ Source: "manual.html"; DestDir: "{app}"; Flags: ignoreversion
 Source: "logo.ico"; DestDir: "{app}"; Flags: ignoreversion
 
 [Icons]
-Name: "{group}\Structure Builder Pro"; Filename: "{app}\StructureBuilderPro.exe"; IconFilename: "{app}\logo.ico"
+Name: "{group}\Structure Builder Pro"; Filename: "{app}\StructureBuilderPro.exe"; IconFilename: "{app}\logo.ico"; AppUserModelID: "Anagma.StructureBuilderPro.v5"
 Name: "{group}\Manual de Uso"; Filename: "{app}\manual.html"
 Name: "{group}\{cm:UninstallProgram,Structure Builder Pro}"; Filename: "{uninstallexe}"
-Name: "{autodesktop}\Structure Builder Pro"; Filename: "{app}\StructureBuilderPro.exe"; Tasks: desktopicon; IconFilename: "{app}\logo.ico"
+Name: "{autodesktop}\Structure Builder Pro"; Filename: "{app}\StructureBuilderPro.exe"; Tasks: desktopicon; IconFilename: "{app}\logo.ico"; AppUserModelID: "Anagma.StructureBuilderPro.v5"
+
+[Registry]
+; Engenharia Sênior: Registro Nativo no Shell do Windows para Soberania de Ícone
+Root: HKCR; Subkey: "Applications\StructureBuilderPro.exe"; ValueType: string; ValueName: "FriendlyAppName"; ValueData: "Structure Builder Pro"; Flags: uninsdeletekey
+Root: HKCR; Subkey: "Applications\StructureBuilderPro.exe"; ValueType: string; ValueName: "AppUserModelID"; ValueData: "Anagma.StructureBuilderPro.v5"; Flags: uninsdeletekey
+Root: HKCR; Subkey: "Applications\StructureBuilderPro.exe\DefaultIcon"; ValueType: string; ValueData: "{app}\logo.ico,0"; Flags: uninsdeletekey
+Root: HKCR; Subkey: "Applications\StructureBuilderPro.exe\shell\open\command"; ValueType: string; ValueData: """{app}\StructureBuilderPro.exe"""; Flags: uninsdeletekey
+
+; Vincula o AppUserModelID globalmente para evitar que o Chrome/Edge sequestre a identidade
+Root: HKCU; Subkey: "Software\Classes\AppUserModelId\Anagma.StructureBuilderPro.v5"; ValueType: string; ValueName: "DisplayName"; ValueData: "Structure Builder Pro"; Flags: uninsdeletekey
+Root: HKCU; Subkey: "Software\Classes\AppUserModelId\Anagma.StructureBuilderPro.v5"; ValueType: string; ValueName: "IconUri"; ValueData: "{app}\logo.ico"; Flags: uninsdeletekey
 
 [Run]
 Filename: "{app}\StructureBuilderPro.exe"; Description: "{cm:LaunchProgram,Structure Builder Pro}"; Flags: nowait postinstall skipifsilent

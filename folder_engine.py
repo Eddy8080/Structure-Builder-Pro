@@ -6,7 +6,7 @@ import shutil
 
 class FolderEngine:
     """
-    Engine v3.7 - Desacoplado v5.6.2.
+    Engine v3.9 - Desacoplado v5.6.2.
     Arquitetura Recursiva Sênior com Blindagem de Escopo e Assinatura Heurística.
     """
     
