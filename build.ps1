@@ -7,18 +7,7 @@ if (Test-Path "build") { Remove-Item -Recurse -Force "build" }
 
 # PASSO ÚNICO: Compilar a Aplicação Principal (Arquitetura Single EXE)
 Write-Host "Compilando Aplicação Principal..." -ForegroundColor Cyan
-pyinstaller --noconfirm --onefile --windowed `
-    --name "StructureBuilderPro" `
-    --icon "logo.ico" `
-    --add-data "web;web" `
-    --add-data "version.json;." `
-    --add-data "manual.html;." `
-    --collect-all "eel" `
-    --collect-all "gevent" `
-    --collect-all "gevent-websocket" `
-    --hidden-import "pywin32" `
-    --hidden-import "win32ctypes" `
-    bridge.py
+pyinstaller --noconfirm StructureBuilderPro.spec
 
 Write-Host "Build do executável concluído com sucesso! O executável está na pasta 'dist'." -ForegroundColor Green
 

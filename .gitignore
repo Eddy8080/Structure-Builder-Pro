@@ -28,7 +28,7 @@ MANIFEST
 
 # PyInstaller
 *.manifest
-*.spec
+# *.spec excluído do ignore — spec files fazem parte da configuração de build
 
 # Unit test / coverage reports
 test_*.py
@@ -166,19 +166,9 @@ TESTE_REPRODUCAO_ESPELHAMENTO/
 TESTE_VALIDACAO_ESPELHAMENTO/
 TESTE_REPRODUCAO_ARRASTE/
 TesteParaUpdate/
-validar_*.py
-testar_*.py
-homologacao_*.py
-stress_test_*.py
-reproduzir_bug_*.py
-verificar_*.py
 
 # OS Specific
 Thumbs.db
 Desktop.ini
 .DS_Store
 *.db
-
-# Project Specific Build Artifacts
-output_installer/
-atualizacao.automatico.md

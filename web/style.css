@@ -787,16 +787,26 @@ button[id="btn-confirm-main"]:hover {
 
 .local-count {
     position: absolute;
-    top: 58%; /* Ajustado para a barriga da pasta */
+    top: 58%; /* Retorna para o centro da pasta */
     left: 50%;
     transform: translate(-50%, -50%);
-    font-size: 0.75rem; /* Um pouco maior para clareza */
+    font-size: 0.75rem;
     font-weight: 900;
     color: #fbbf24;
     z-index: 2;
     pointer-events: none;
     line-height: 1;
-    text-shadow: 1px 1px 3px rgba(0,0,0,0.5); /* Sombra para profundidade */
+    text-shadow: 1px 1px 3px rgba(0,0,0,0.5);
+}
+
+/* Engenharia Sênior: Posicionamento Exclusivo para a Raiz */
+.mirror-root-container .local-count {
+    top: -10px; /* Elevado apenas na raiz */
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.6); /* Fundo apenas na raiz para contraste */
+    padding: 0 5px;
+    border-radius: 4px;
+    font-size: 0.7rem;
 }
 
 .total-count-badge {

@@ -475,7 +475,6 @@ def iniciar_app():
 
     try:
         # Abrimos em modo App com isolamento total de perfil e identidade vinculada
-        # Removidas flags redundantes para garantir estabilidade do processo gráfico
         eel.start('index.html', 
                   mode='chrome', 
                   port=0, 
