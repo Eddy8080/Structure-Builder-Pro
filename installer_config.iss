@@ -7,9 +7,13 @@ AppName=Structure Builder Pro
 AppVersion=5.6.2
 AppPublisher=Edilson Monteiro
 AppMutex=Anagma.StructureBuilderPro.v5
+PrivilegesRequired=admin
+ArchitecturesInstallIn64BitMode=x64compatible
 DefaultDirName={autopf}\StructureBuilderPro
 DefaultGroupName=Structure Builder Pro
 AllowNoIcons=yes
+WizardSmallImageFile=logo_pequena.png
+WizardImageFile=banner_lateral.png
 ; Fecha a aplicação automaticamente se estiver aberta
 CloseApplications=yes
 ; Tenta reiniciar a aplicação se necessário

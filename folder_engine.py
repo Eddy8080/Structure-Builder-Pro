@@ -3,6 +3,7 @@ import sys
 import re
 import json
 import shutil
+import subprocess
 
 class FolderEngine:
     """
@@ -96,6 +97,12 @@ class FolderEngine:
 
     def scan_recursive(self, path, include_files=False):
         """Escaneia o disco. Proteção Sênior: Bloqueia pastas de infraestrutura de código."""
+        # Remove prefixo \\?\ do caminho para garantir full_path consistente em toda a árvore.
+        # os.scandir retorna entry.path com o mesmo prefixo do path passado — sem normalizar,
+        # filhos e netos ficam com \\?\C:\... enquanto a raiz fica com C:\..., quebrando
+        # comparações de prefixo em substituir_prefixo_recursivo durante o espelhamento.
+        if isinstance(path, str) and path.startswith('\\\\?\\'):
+            path = path[4:]
         fixed_path = self._fix_path(path)
         node = {
             "name": os.path.basename(path),
@@ -105,18 +112,18 @@ class FolderEngine:
             "file_count": 0,
             "total_file_count": 0
         }
-        
+
         # Filtros de exclusão UNIVERSAIS (Nunca devem ser espelhados ou contados)
         # Isso remove o risco de replicar venv ou .git para dentro de pastas de trabalho.
         ignore_set = {
-            'venv', '.venv', '__pycache__', 'node_modules', '.git', 
+            'venv', '.venv', '__pycache__', 'node_modules', '.git',
             '.idea', '.vscode', 'build', 'dist', '.gemini', '.pytest_cache',
             'output_installer', 'TESTE_VALIDACAO_ESPELHAMENTO', 'venv_PROD'
         }
-        
+
         file_count = 0
         total_file_count = 0
-        
+
         try:
             with os.scandir(fixed_path) as it:
                 for entry in it:
@@ -125,24 +132,26 @@ class FolderEngine:
                         continue
 
                     if entry.is_dir():
-                        child_node = self.scan_recursive(entry.path, include_files)
+                        # Usa path normalizado (sem \\?\) para manter full_path consistente
+                        child_path = os.path.join(path, entry.name)
+                        child_node = self.scan_recursive(child_path, include_files)
                         node["children"].append(child_node)
                         total_file_count += child_node.get("total_file_count", 0)
-                    
+
                     elif entry.is_file():
                         file_count += 1
                         total_file_count += 1
-                        
+
                         if include_files:
                             node["children"].append({
                                 "name": entry.name,
-                                "full_path": entry.path,
+                                "full_path": os.path.join(path, entry.name),
                                 "type": "file",
                                 "children": []
                             })
         except (PermissionError, Exception):
-            pass 
-            
+            pass
+
         node["file_count"] = file_count
         node["total_file_count"] = total_file_count
         return node
@@ -173,6 +182,33 @@ class FolderEngine:
         except Exception as e:
             return str(e)
 
+    def _mover_para_lixeira(self, path):
+        """Envia arquivo ou pasta para a Lixeira do Windows via Microsoft.VisualBasic."""
+        try:
+            abs_path = os.path.abspath(path)
+            if not os.path.exists(self._fix_path(abs_path)):
+                return True
+            if os.path.isdir(abs_path):
+                ps_cmd = (
+                    'Add-Type -AssemblyName Microsoft.VisualBasic; '
+                    f'[Microsoft.VisualBasic.FileIO.FileSystem]::DeleteDirectory('
+                    f'"{abs_path}", "OnlyErrorDialogs", "SendToRecycleBin")'
+                )
+            else:
+                ps_cmd = (
+                    'Add-Type -AssemblyName Microsoft.VisualBasic; '
+                    f'[Microsoft.VisualBasic.FileIO.FileSystem]::DeleteFile('
+                    f'"{abs_path}", "OnlyErrorDialogs", "SendToRecycleBin")'
+                )
+            subprocess.run(
+                ['powershell', '-WindowStyle', 'Hidden', '-NonInteractive', '-Command', ps_cmd],
+                capture_output=True,
+                creationflags=subprocess.CREATE_NO_WINDOW
+            )
+            return True
+        except Exception as e:
+            return str(e)
+
     def sync_mirroring(self, base_path, tree_data):
         """
         Aplica as mudanças da árvore virtual no disco físico com Blindagem de Escopo.
@@ -182,17 +218,68 @@ class FolderEngine:
             if self._is_protected_path(base_path):
                 raise Exception("Operação de Espelhamento Bloqueada: A pasta alvo é uma Zona Protegida.")
 
+            def substituir_prefixo_recursivo(no, prefixo_antigo, prefixo_novo):
+                if no.get("full_path"):
+                    # Remove prefixo \\?\ de sessões antigas antes de comparar
+                    fp = no["full_path"]
+                    if isinstance(fp, str) and fp.startswith('\\\\?\\'):
+                        fp = fp[4:]
+                    ant = os.path.normcase(os.path.normpath(prefixo_antigo))
+                    atual = os.path.normcase(os.path.normpath(fp))
+                    if atual.startswith(ant + os.sep) or atual == ant:
+                        rel = os.path.relpath(
+                            os.path.normpath(fp),
+                            os.path.normpath(prefixo_antigo)
+                        )
+                        no["full_path"] = os.path.join(prefixo_novo, rel)
+                for filho in no.get("children", []):
+                    substituir_prefixo_recursivo(filho, prefixo_antigo, prefixo_novo)
+
+            def normalizar_path(p):
+                r"""Remove prefixo \\?\ e normaliza separadores para comparações."""
+                if isinstance(p, str) and p.startswith('\\\\?\\'):
+                    p = p[4:]
+                return p
+
+            def resolver_original(full_path_raw, current_physical_parent):
+                """
+                Resolve o caminho físico real de um item com base em duas estratégias:
+                1. full_path direto (após normalizar UNC)
+                2. Fallback: procura pelo nome original do item dentro do diretório
+                   físico atual — cobre o caso em que a pasta pai foi renomeada mas
+                   substituir_prefixo_recursivo não atualizou este nó por qualquer motivo.
+                """
+                p = normalizar_path(full_path_raw)
+                if p and os.path.exists(self._fix_path(p)):
+                    return p
+                # Fallback: o item pode ter sido arrastado junto com o pai renomeado
+                if p:
+                    candidato = os.path.join(current_physical_parent, os.path.basename(p))
+                    if os.path.exists(self._fix_path(candidato)):
+                        return candidato
+                return None
+
             def process_mirror_node(node, current_physical_parent):
+                # Itens marcados para deletar — envia para a Lixeira e não processa filhos
+                if node.get("status") == "to_delete":
+                    original_path = resolver_original(
+                        node.get("full_path"), current_physical_parent
+                    )
+                    if original_path and os.path.exists(self._fix_path(original_path)):
+                        self._mover_para_lixeira(original_path)
+                    return
+
                 # O target_path é onde o item DEVE estar agora
                 target_path = os.path.join(current_physical_parent, self._sanitize(node["name"]))
-                
+
                 # Blindagem interna recursiva
                 if self._is_protected_path(target_path):
                     raise Exception(f"Violação de Escopo: Tentativa de escrita em zona protegida: {target_path}")
 
-                original_path = node.get("full_path")
-                
-                # Se o item já existe no disco no local correto (target_path), 
+                # Resolve o caminho físico real do item (direto ou via fallback por nome)
+                original_path = resolver_original(node.get("full_path"), current_physical_parent)
+
+                # Se o item já existe no disco no local correto (target_path),
                 # atualizamos o original_path para evitar tentativas de move inválidas
                 if os.path.exists(self._fix_path(target_path)):
                     original_path = target_path
@@ -207,7 +294,6 @@ class FolderEngine:
                                 if os.path.exists(self._fix_path(target_path)) and os.path.isdir(self._fix_path(target_path)):
                                     if not os.listdir(self._fix_path(target_path)):
                                         os.rmdir(self._fix_path(target_path))
-                            
                             shutil.move(self._fix_path(original_path), self._fix_path(target_path))
                             original_path = target_path
                         except PermissionError:
@@ -220,17 +306,15 @@ class FolderEngine:
                         os.makedirs(self._fix_path(target_path), exist_ok=True)
                         original_path = target_path
 
-                # Identifica o que deve ser mantido neste nível
+                # Processa descendentes de diretórios
                 if node["type"] == "directory":
+                    old_full = normalizar_path(node.get("full_path", ""))
+                    if (original_path and old_full and
+                            os.path.normcase(os.path.normpath(original_path)) !=
+                            os.path.normcase(os.path.normpath(old_full))):
+                        for child in node.get("children", []):
+                            substituir_prefixo_recursivo(child, old_full, original_path)
                     for child in node.get("children", []):
-                        # Engenharia Sênior: Atualização inteligente de caminhos de filhos.
-                        if original_path != node.get("full_path") and child.get("full_path"):
-                            old_p = os.path.normcase(os.path.normpath(node.get("full_path", "")))
-                            child_p = os.path.normcase(os.path.normpath(os.path.dirname(child["full_path"])))
-                            if old_p == child_p:
-                                rel_name = os.path.basename(child["full_path"])
-                                child["full_path"] = os.path.join(original_path, rel_name)
-
                         process_mirror_node(child, target_path)
 
             # Executa a sincronização

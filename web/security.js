@@ -181,7 +181,7 @@
 
             global.mermaid.initialize = function shieldedMermaidInit(config) {
                 if (config && config.securityLevel === 'loose') {
-                    console.warn(
+                console.warn(
                         LOG,
                         'mermaid.initialize: securityLevel "loose" bloqueado → substituído por "antiscript".'
                     );

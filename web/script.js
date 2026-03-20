@@ -21,7 +21,8 @@ document.addEventListener('DOMContentLoaded', () => {
     inicializarTema();
     restaurarMirroringState();
     configurarEventosMirror(); 
-    verificarAtualizacaoSilenciosa(); // Engenharia Sênior: Verificação na inicialização
+    verificarAtualizacaoSilenciosa(); // Verificação na inicialização
+    setInterval(verificarAtualizacaoSilenciosa, 30 * 60 * 1000); // reverifica a cada 30 minutos
 });
 
 /**
@@ -63,6 +64,19 @@ async function confirmar_instalacao() {
     });
 
     return result.isConfirmed;
+}
+
+async function verificarAtualizacaoSilenciosa() {
+    try {
+        const res = await eel.verificar_atualizacao_disponivel()();
+        const btn = document.getElementById('btn-check-update');
+        if (!btn) return;
+        if (res && !res.error && res.has_update) {
+            btn.classList.add('update-available');
+        } else {
+            btn.classList.remove('update-available');
+        }
+    } catch (e) { /* silencioso — sem internet ou servidor indisponível */ }
 }
 
 async function executarVerificacaoManual() {
@@ -354,6 +368,7 @@ function configurarEventos() {
     document.addEventListener('click', (e) => {
         document.getElementById('context-menu').classList.add('hidden');
         document.getElementById('template-context-menu').classList.add('hidden');
+        document.getElementById('mirror-context-menu').classList.add('hidden');
         if (!e.target.closest('.template-item')) document.querySelectorAll('.template-item').forEach(el => el.classList.remove('selected'));
     });
 }
@@ -365,9 +380,7 @@ function configurarAtalhos() {
         if (mirroringState.isMirrorMode && mirroringState.selectedIds.length > 0) {
             if (e.key === 'F2') { e.preventDefault(); iniciarRenomeacaoMirror(); }
             if (e.key === 'Delete') { e.preventDefault(); removerPastaMirror(); }
-        }
-
-        if (state.selectedId) {
+        } else if (state.selectedId) {
             if (e.key === 'F2') { e.preventDefault(); iniciarRenomeacao(); }
             if (e.key === 'Delete') { e.preventDefault(); removerPasta(state.selectedId); }
         }
@@ -375,7 +388,7 @@ function configurarAtalhos() {
             if (e.key === 'Delete') { e.preventDefault(); removerModeloInterface(state.selectedTemplateIdx); }
             if (e.key === 'F2') { e.preventDefault(); renomearModeloInterface(state.selectedTemplateIdx); }
         }
-        if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'n') { e.preventDefault(); criarNovaPasta(); }
+        if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'n') { e.preventDefault(); if (mirroringState.isMirrorMode) criarNovaPastaMirror(); else criarNovaPasta(); }
         if (e.key === 'Enter' && !document.getElementById('rename-floating-bar').classList.contains('hidden')) confirmarRenomeacao();
     });
 }
@@ -583,15 +596,24 @@ function configurarEventosMirror() {
     document.getElementById('btn-mirror-load').onclick = async () => {
         const path = await eel.selecionar_pasta("Selecionar Pasta")();
         if (path) {
+            const normalizedPath = path.replace(/\\/g, '/');
+            // Fix 6: auto-salva estado atual como lembrança antes de trocar/recarregar pasta
+            if (mirroringState.editableTree && mirroringState.basePath && mirroringState.basePath !== normalizedPath) {
+                salvarLembrancaMirror();
+            }
             mostrarLoader("Mapeando...");
             try {
                 const dados = await eel.carregar_estrutura_existente(path, true)();
                 if (dados.error) { alertar("Erro", dados.error, 'error'); return; }
-                mirroringState.basePath = path;
-                if (mirroringState.history[path]) { mirroringState.editableTree = mirroringState.history[path].tree; mirroringState.lastUpdate = mirroringState.history[path].lastUpdate; }
-                else { mirroringState.editableTree = prepararArvoreEspelhamento(dados.tree_structure, true); mirroringState.lastUpdate = null; }
+                // Fix 2: sempre usa scan físico do disco, ignorando cache de histórico
+                mirroringState.basePath = normalizedPath;
+                mirroringState.editableTree = prepararArvoreEspelhamento(dados.tree_structure, true);
+                mirroringState.selectedIds = []; // IDs foram regenerados — limpa seleção stale
+                mirroringState.lastUpdate = null;
+                mirroringState.history[normalizedPath] = { tree: mirroringState.editableTree, lastUpdate: null };
                 atualizarLabelData(mirroringState.lastUpdate); mirroringState.syncedTree = JSON.parse(JSON.stringify(mirroringState.editableTree));
                 atualizarVisibilidadeBotaoRecall();
+                document.getElementById('btn-mirror-sync').classList.remove('hidden');
                 renderizarArvoresEspelhamento(); persistirMirroringState();
             } catch (err) { alertar("Erro", "Falha ao carregar."); } finally { esconderLoader(); }
         }
@@ -605,25 +627,49 @@ function configurarEventosMirror() {
             const res = await eel.aplicar_espelhamento(mirroringState.basePath, mirroringState.editableTree)();
             if (res.error) alertar("Erro", res.error, 'error');
             else {
-                mirroringState.basePath = res.new_structure.full_path;
-                const mark = (n, isRoot) => { 
-                    if (isRoot || n.status === "pending") n.status = "applied"; 
-                    else if (!n.status) n.status = "idle";
-                    if (n.children) n.children.forEach(c => mark(c, false)); 
-                };
-                mark(mirroringState.editableTree, true); 
+                // Fix 1: normaliza basePath para forward slash, evitando mismatch no security.js
+                mirroringState.basePath = res.new_structure.full_path.replace(/\\/g, '/');
+                // Fix 3: reconstrói editableTree a partir do scan físico (full_path corretos)
+                // preservando o estado de expansão dos nós pelo nome
+                const expandidosAnteriores = {};
+                const coletarExpandidos = (n) => { expandidosAnteriores[n.name] = n.isExpanded; (n.children||[]).forEach(coletarExpandidos); };
+                coletarExpandidos(mirroringState.editableTree);
+                mirroringState.editableTree = prepararArvoreEspelhamento(res.new_structure, true);
+                const restaurarEstado = (n) => { if (expandidosAnteriores[n.name] !== undefined) n.isExpanded = expandidosAnteriores[n.name]; n.status = "applied"; (n.children||[]).forEach(restaurarEstado); };
+                restaurarEstado(mirroringState.editableTree);
+                mirroringState.selectedIds = []; // IDs foram regenerados — limpa seleção stale
                 const dataFormatada = new Date().toLocaleString('pt-BR');
                 mirroringState.lastUpdate = dataFormatada; atualizarLabelData(dataFormatada);
                 mirroringState.syncedTree = JSON.parse(JSON.stringify(mirroringState.editableTree));
-                renderizarArvoresEspelhamento(); persistirMirroringState(); 
+                renderizarArvoresEspelhamento(); persistirMirroringState();
                 Toast.fire({ icon: 'success', title: 'Sincronizado!' });
             }
         } catch (err) { alertar("Erro", "Falha na comunicação."); }
         finally { esconderLoader(); }
     };
+    document.getElementById('btn-mirror-sync').onclick = async () => {
+        if (!mirroringState.basePath) return;
+        mostrarLoader("Sincronizando com o disco...");
+        try {
+            const dados = await eel.carregar_estrutura_existente(mirroringState.basePath, true)();
+            if (dados.error) { alertar("Erro", dados.error, 'error'); return; }
+            const expandidosAnteriores = {};
+            const coletarExpandidos = (n) => { expandidosAnteriores[n.name] = n.isExpanded; (n.children||[]).forEach(coletarExpandidos); };
+            coletarExpandidos(mirroringState.editableTree);
+            mirroringState.editableTree = prepararArvoreEspelhamento(dados.tree_structure, true);
+            mirroringState.selectedIds = []; // IDs foram regenerados — limpa seleção stale
+            const restaurarExpandidos = (n) => { if (expandidosAnteriores[n.name] !== undefined) n.isExpanded = expandidosAnteriores[n.name]; (n.children||[]).forEach(restaurarExpandidos); };
+            restaurarExpandidos(mirroringState.editableTree);
+            mirroringState.syncedTree = JSON.parse(JSON.stringify(mirroringState.editableTree));
+            renderizarArvoresEspelhamento(); persistirMirroringState();
+            Toast.fire({ icon: 'success', title: 'Árvore sincronizada com o disco!' });
+        } catch (err) { alertar("Erro", "Falha ao sincronizar."); }
+        finally { esconderLoader(); }
+    };
     document.getElementById('btn-mirror-clear').onclick = () => {
         mirroringState.basePath = ""; mirroringState.editableTree = null; mirroringState.syncedTree = null; mirroringState.lastUpdate = null;
         atualizarLabelData(null);
+        document.getElementById('btn-mirror-sync').classList.add('hidden');
         const t1 = document.getElementById('mirror-tree-editable');
         const t2 = document.getElementById('mirror-tree-synced');
         if (t1) t1.innerHTML = ''; 
@@ -659,20 +705,29 @@ function salvarLembrancaMirror() {
     Toast.fire({ icon: 'success', title: 'Lembrança salva!' });
 }
 
+// Resolve chave real no pinnedSnapshots tolerando backslash/forward-slash (migração de versões antigas)
+function resolverChaveMemory(p) {
+    if (mirroringState.pinnedSnapshots[p] !== undefined) return p;
+    const normalizado = p.replace(/\\/g, '/');
+    return Object.keys(mirroringState.pinnedSnapshots).find(k => k.replace(/\\/g, '/') === normalizado) || null;
+}
+
 async function restaurarLembrancaMirror() {
     const chaves = Object.keys(mirroringState.pinnedSnapshots);
     if (chaves.length === 0) { Toast.fire({ icon: 'info', title: 'Nenhuma lembrança.' }); return; }
 
     // Engenharia Sênior: Central de Gestão de Memórias (Contraste e Gestão)
     let listHtml = `<div class="memory-management-list">`;
-    chaves.sort((a,b) => mirroringState.pinnedSnapshots[b].timestamp - mirroringState.pinnedSnapshots[a].timestamp).forEach(path => {
+    chaves.sort((a,b) => (mirroringState.pinnedSnapshots[b].timestamp || 0) - (mirroringState.pinnedSnapshots[a].timestamp || 0)).forEach(path => {
         const snap = mirroringState.pinnedSnapshots[path];
-        const data = new Date(snap.timestamp).toLocaleString('pt-BR');
+        const nomePasta = snap.folderName || path.replace(/\\/g, '/').split('/').pop() || path;
+        const data = snap.timestamp ? new Date(snap.timestamp).toLocaleString('pt-BR') : 'Data não disponível';
+        const chaveEscapada = path.replace(/\\/g, '/').replace(/'/g, "\\'");
         listHtml += `
-            <div class="memory-item" onclick="window.confirmarRestauracaoMemory('${path.replace(/\\/g, '/')}')">
-                <button class="delete-memory-btn" onclick="event.stopPropagation(); window.deletarMemory('${path.replace(/\\/g, '/')}')" title="Excluir Lembrança">×</button>
+            <div class="memory-item" onclick="window.confirmarRestauracaoMemory('${chaveEscapada}')">
+                <button class="delete-memory-btn" onclick="event.stopPropagation(); window.deletarMemory('${chaveEscapada}')" title="Excluir Lembrança">×</button>
                 <div class="memory-info">
-                    <span class="memory-name">${snap.folderName}</span>
+                    <span class="memory-name">${nomePasta}</span>
                     <span class="memory-date">${data}</span>
                 </div>
             </div>
@@ -680,19 +735,22 @@ async function restaurarLembrancaMirror() {
     });
     listHtml += `</div>`;
 
-    window.confirmarRestauracaoMemory = (p) => { 
-        const path = p;
-        Swal.close(); 
-        if (mirroringState.pinnedSnapshots[path]) {
-            aplicarSnapshotMirror(path, mirroringState.pinnedSnapshots[path]); 
-            Toast.fire({ icon: 'success', title: 'Projeto recuperado!' }); 
+    window.confirmarRestauracaoMemory = (p) => {
+        Swal.close();
+        const chave = resolverChaveMemory(p);
+        if (chave) {
+            aplicarSnapshotMirror(chave.replace(/\\/g, '/'), mirroringState.pinnedSnapshots[chave]);
+            Toast.fire({ icon: 'success', title: 'Projeto recuperado!' });
         }
     };
 
-    window.deletarMemory = async (p) => { 
-        const path = p;
-        if (await confirmar("Excluir", `Remover lembrança de "${mirroringState.pinnedSnapshots[path].folderName}"?`)) {
-            delete mirroringState.pinnedSnapshots[path];
+    window.deletarMemory = async (p) => {
+        const chave = resolverChaveMemory(p);
+        if (!chave) return;
+        const snap = mirroringState.pinnedSnapshots[chave];
+        const nomePasta = snap.folderName || chave.replace(/\\/g, '/').split('/').pop() || chave;
+        if (await confirmar("Excluir", `Remover lembrança de "${nomePasta}"?`)) {
+            delete mirroringState.pinnedSnapshots[chave];
             persistirMirroringState();
             atualizarVisibilidadeBotaoRecall();
             Swal.close();
@@ -719,6 +777,7 @@ function aplicarSnapshotMirror(path, snapshot) {
     atualizarLabelData(mirroringState.lastUpdate);
     recalcularContagensVirtuais(mirroringState.editableTree);
     renderizarArvoresEspelhamento();
+    document.getElementById('btn-mirror-sync').classList.remove('hidden');
     persistirMirroringState();
 }
 
@@ -735,7 +794,7 @@ function renderizarArvoreMirror(tree, containerId, isEditable) {
     const montarHTML = (node, isRoot = false) => {
         const divNode = document.createElement('div'); divNode.className = "tree-node"; const content = document.createElement('div');
         const isSelected = mirroringState.selectedIds.includes(node.id);
-        let sClass = node.status === "applied" ? "status-applied" : (node.status === "pending" ? "status-pending" : "");
+        let sClass = node.status === "applied" ? "status-applied" : (node.status === "pending" ? "status-pending" : (node.status === "to_delete" ? "status-to-delete" : ""));
         if (node.type === "file") {
             content.className = `file-item-mirror ${isSelected ? 'selected-multiple' : ''} ${sClass}`;
             content.innerHTML = `<i data-lucide="file-text"></i><span class="file-name-text">${node.name}</span>`;
@@ -750,9 +809,17 @@ function renderizarArvoreMirror(tree, containerId, isEditable) {
             
             content.innerHTML = `${toggleIcon}<div class="${isRoot ? 'mirror-root-container' : 'subfolder-stack'}"><i data-lucide="${isRoot ? 'folder-tree' : 'folder'}" class="folder-icon"></i>${localCount}</div><span class="folder-name-text">${node.name}</span>`;
         }
-        content.dataset.id = node.id; content.draggable = isEditable;
+        content.dataset.id = node.id; content.draggable = isEditable && node.status !== "to_delete";
         content.onclick = (e) => { e.stopPropagation(); selecionarItemMirror(node.id); };
         if (node.type !== "file") content.ondblclick = () => toggleMirrorNode(node.id);
+        if (isEditable && node.status === "to_delete") {
+            const undoBtn = document.createElement('button');
+            undoBtn.className = 'undo-delete-btn';
+            undoBtn.title = 'Desfazer exclusão';
+            undoBtn.innerHTML = '↩ Desfazer';
+            undoBtn.onclick = (e) => { e.stopPropagation(); desfazerDeleteMirror(node.id); };
+            content.appendChild(undoBtn);
+        }
         if (isEditable) {
             content.ondragstart = (e) => { mirroringState.draggedIds = [node.id]; e.dataTransfer.setData('text/plain', node.id); };
             content.ondragover = (e) => { 
@@ -810,9 +877,9 @@ function renderizarArvoreMirror(tree, containerId, isEditable) {
             };
         }
         divNode.appendChild(content);
-        if (node.type !== "file" && node.isExpanded && node.children) {
+        if (node.type !== "file" && node.isExpanded && node.children && node.status !== "to_delete") {
             const divChildren = document.createElement('div'); divChildren.className = "tree-children";
-            node.children.sort((a,b) => (a.type !== b.type ? (a.type === "directory" ? -1 : 1) : a.name.localeCompare(b.name, 'pt-BR', { numeric: true }))).forEach(child => divChildren.appendChild(montarHTML(child)));
+            [...node.children].sort((a,b) => (a.type !== b.type ? (a.type === "directory" ? -1 : 1) : a.name.localeCompare(b.name, 'pt-BR', { numeric: true }))).forEach(child => divChildren.appendChild(montarHTML(child)));
             divNode.appendChild(divChildren);
         }
         return divNode;
@@ -880,19 +947,40 @@ function iniciarRenomeacaoMirror() {
     if (mirroringState.selectedIds.length === 0) return; const id = mirroringState.selectedIds[0], n = findMirrorNode(mirroringState.editableTree, id), el = document.querySelector(`#mirror-tree-editable [data-id="${id}"]`);
     if (!n || !el) return; const span = el.querySelector('.folder-name-text') || el.querySelector('.file-name-text') || el.querySelector('span');
     const input = document.createElement('input'); input.type = 'text'; input.className = 'inline-rename-input'; input.value = n.name;
-    span.style.display = 'none'; span.parentNode.insertBefore(input, span); 
-    setTimeout(() => { input.focus(); if (n.type === "file") { const lastDot = n.name.lastIndexOf('.'); if (lastDot > 0) input.setSelectionRange(0, lastDot); else input.select(); } else input.select(); }, 10);
-    const done = (salvar) => { if (salvar && input.value.trim() && input.value.trim() !== n.name) { n.name = input.value.trim(); n.status = "pending"; mirroringState.syncedTree = JSON.parse(JSON.stringify(mirroringState.editableTree)); persistirMirroringState(); } renderizarArvoresEspelhamento(); };
-    input.onkeydown = (e) => { if (e.key === 'Enter') done(true); if (e.key === 'Escape') done(false); }; input.onblur = () => done(true);
+    el.draggable = false; // libera o mouse para selecionar texto sem acionar drag-and-drop
+    span.style.display = 'none'; span.parentNode.insertBefore(input, span);
+    setTimeout(() => { input.focus(); const lastDot = n.name.lastIndexOf('.'); if (lastDot > 0) { input.setSelectionRange(0, lastDot); } else { input.select(); } }, 10);
+    let executed = false;
+    const done = (salvar) => { if (executed) return; executed = true; el.draggable = true; if (salvar && input.value.trim() && input.value.trim() !== n.name) { n.name = input.value.trim(); n.status = "pending"; mirroringState.syncedTree = JSON.parse(JSON.stringify(mirroringState.editableTree)); persistirMirroringState(); } renderizarArvoresEspelhamento(); };
+    input.onclick = (e) => e.stopPropagation(); // impede que cliques dentro do input disparem selecionarItemMirror
+    input.onmousedown = (e) => e.stopPropagation(); // impede drag do pai durante seleção de texto
+    input.onkeydown = (e) => { if (e.key === 'Enter') done(true); if (e.key === 'Escape') done(false); }; input.onblur = () => done(false);
 }
 
 function removerPastaMirror() {
-    if (mirroringState.selectedIds.length === 0) return; confirmar("Remover", "Excluir itens?").then(ok => {
-        if (ok) {
-            mirroringState.selectedIds.forEach(id => { const p = findMirrorParent(mirroringState.editableTree, id); if (p) { const idx = p.children.findIndex(c => c.id === id); p.children.splice(idx, 1); } });
-            recalcularContagensVirtuais(mirroringState.editableTree); mirroringState.syncedTree = JSON.parse(JSON.stringify(mirroringState.editableTree)); renderizarArvoresEspelhamento(); persistirMirroringState();
+    if (mirroringState.selectedIds.length === 0) return;
+    mirroringState.selectedIds.forEach(id => {
+        const n = findMirrorNode(mirroringState.editableTree, id);
+        if (n && n.status !== "to_delete") {
+            n._statusAnterior = n.status;
+            n.status = "to_delete";
         }
     });
+    recalcularContagensVirtuais(mirroringState.editableTree);
+    mirroringState.syncedTree = JSON.parse(JSON.stringify(mirroringState.editableTree));
+    renderizarArvoresEspelhamento();
+    persistirMirroringState();
+}
+
+function desfazerDeleteMirror(id) {
+    const n = findMirrorNode(mirroringState.editableTree, id);
+    if (!n) return;
+    n.status = n._statusAnterior !== undefined ? n._statusAnterior : null;
+    delete n._statusAnterior;
+    recalcularContagensVirtuais(mirroringState.editableTree);
+    mirroringState.syncedTree = JSON.parse(JSON.stringify(mirroringState.editableTree));
+    renderizarArvoresEspelhamento();
+    persistirMirroringState();
 }
 
 function inicializarResizerUnificado() {
