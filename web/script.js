@@ -919,6 +919,7 @@ async function restaurarMirroringState() {
                 mirroringState.lastUpdate = mirroringState.history[d.activePath].lastUpdate;
                 mirroringState.syncedTree = JSON.parse(JSON.stringify(mirroringState.editableTree));
                 atualizarLabelData(mirroringState.lastUpdate);
+                document.getElementById('btn-mirror-sync').classList.remove('hidden');
             }
         }
     } catch(e) {} 
