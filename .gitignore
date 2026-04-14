@@ -25,6 +25,7 @@ share/python-wheels/
 .installed.cfg
 *.egg
 MANIFEST
+sit.md
 
 # PyInstaller
 *.manifest
@@ -167,8 +168,14 @@ TESTE_VALIDACAO_ESPELHAMENTO/
 TESTE_REPRODUCAO_ARRASTE/
 TesteParaUpdate/
 
+# AI Tools (Claude, Cursor, etc)
+.claude/
+.cursor/
+
 # OS Specific
 Thumbs.db
 Desktop.ini
 .DS_Store
 *.db
+*.log
+*.tmp

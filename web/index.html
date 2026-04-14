@@ -31,6 +31,9 @@
                 <button id="btn-mirroring-menu" class="action-btn">
                     <i data-lucide="copy"></i> Espelhamento de Pastas
                 </button>
+                <button id="btn-mass-rename-menu" class="action-btn">
+                    <i data-lucide="pencil-line"></i> Renomeação em Massa
+                </button>
                 <div class="separator"></div>
                 <button id="btn-create" class="action-btn primary">
                     <i data-lucide="plus-circle"></i> Criar e Finalizar
@@ -186,6 +189,82 @@
                     </div>
                 </div>
             </div>
+            <!-- SEÇÃO DE RENOMEAÇÃO EM MASSA -->
+            <div id="mass-rename-section" class="content-wrapper hidden">
+                <div class="mr-container">
+
+                    <div class="navigation-header">
+                        <button id="btn-back-from-mass-rename" class="nav-btn-back">
+                            <i data-lucide="arrow-left-circle"></i> Voltar
+                        </button>
+                    </div>
+
+                    <!-- Card de Configuração -->
+                    <section class="card mr-config-card">
+                        <div class="section-header">
+                            <h2><i data-lucide="pencil-line"></i> Renomeação em Massa</h2>
+                        </div>
+
+                        <!-- Passo 1 -->
+                        <div class="mr-step">
+                            <div class="mr-step-label">
+                                <span class="mr-badge">1</span>
+                                <label>Pasta Modelo <small>— Structure Builder detectará o padrão de nome</small></label>
+                            </div>
+                            <div class="input-with-button">
+                                <input type="text" id="mr-pattern-input" placeholder="Selecione uma pasta modelo para detectar o padrão..." readonly>
+                                <button id="mr-btn-select-model" title="Selecionar Pasta Modelo"><i data-lucide="search"></i></button>
+                            </div>
+                        </div>
+
+                        <!-- Passo 2 -->
+                        <div class="mr-step">
+                            <div class="mr-step-label">
+                                <span class="mr-badge">2</span>
+                                <label>Novo Nome da Pasta</label>
+                            </div>
+                            <input type="text" id="mr-new-name-input" class="mr-full-input" placeholder="Digite o novo nome que substituirá o padrão encontrado...">
+                        </div>
+
+                        <!-- Passo 3 -->
+                        <div class="mr-step">
+                            <div class="mr-step-label">
+                                <span class="mr-badge">3</span>
+                                <label>Unidade / Raiz de Busca <small>— local ou servidor de rede</small></label>
+                            </div>
+                            <div class="input-with-button">
+                                <input type="text" id="mr-root-input" placeholder="Selecione a pasta raiz onde a busca será realizada..." readonly>
+                                <button id="mr-btn-select-root" title="Selecionar Unidade ou Pasta Raiz"><i data-lucide="hard-drive"></i></button>
+                            </div>
+                        </div>
+
+                        <div class="mr-actions">
+                            <button id="mr-btn-search" class="action-btn primary">
+                                <i data-lucide="search"></i> Buscar Pastas em Profundidade
+                            </button>
+                        </div>
+                    </section>
+
+                    <!-- Card de Resultados -->
+                    <section class="card mr-results-card">
+                        <div class="section-header">
+                            <h2><i data-lucide="list-tree"></i> Pastas Encontradas <span id="mr-results-count" class="mr-count-badge"></span></h2>
+                            <div class="header-actions">
+                                <button id="mr-btn-apply" class="action-btn primary small-btn hidden">
+                                    <i data-lucide="check-circle"></i> Aplicar Renomeação
+                                </button>
+                            </div>
+                        </div>
+                        <div id="mr-results-list" class="mr-results-container">
+                            <div class="empty-tree-state">
+                                <i data-lucide="info"></i>
+                                <p>Preencha os campos acima e clique em "Buscar Pastas em Profundidade".</p>
+                            </div>
+                        </div>
+                    </section>
+
+                </div>
+            </div>
         </main>
     </div>
 
@@ -231,6 +310,22 @@
             <div id="mermaid-container" class="mermaid-viewer"></div>
             <div class="modal-footer">
                 <button id="btn-download-diagram" class="small-btn info">Baixar SVG</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal do Manual In-App -->
+    <div id="manual-modal" class="modal-overlay hidden">
+        <div class="manual-container card">
+            <header class="manual-header">
+                <div class="manual-title">
+                    <i data-lucide="book-open"></i>
+                    <h3>Manual do Sistema</h3>
+                </div>
+                <button id="btn-close-manual" class="close-btn" title="Fechar Manual">&times;</button>
+            </header>
+            <div class="manual-body">
+                <iframe id="manual-frame" src="about:blank"></iframe>
             </div>
         </div>
     </div>

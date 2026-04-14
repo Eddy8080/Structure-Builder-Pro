@@ -49,10 +49,10 @@ _CSP = "; ".join([
     "img-src 'self' data: blob:",
     # Conexões: apenas localhost (WebSocket do eel)
     "connect-src 'self' ws://localhost:* wss://localhost:*",
-    # Bloqueia completamente workers, objects e frames
+    # Bloqueia completamente workers e objects, permite frames de 'self' para o manual
     "worker-src 'none'",
     "object-src 'none'",
-    "frame-src 'none'",
+    "frame-src 'self'",
     "frame-ancestors 'none'",
     # Restringe base URI e form actions
     "base-uri 'self'",

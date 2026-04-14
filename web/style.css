@@ -1026,3 +1026,243 @@ button[id="btn-confirm-main"]:hover {
     70% { box-shadow: 0 0 0 10px rgba(251, 191, 36, 0); }
     100% { box-shadow: 0 0 0 0 rgba(251, 191, 36, 0); }
 }
+
+/* =========================================================
+   RENOMEAÇÃO EM MASSA
+   ========================================================= */
+
+.mr-container {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 0 8px 24px;
+    height: 100%;
+    overflow-y: auto;
+}
+
+.mr-config-card,
+.mr-results-card {
+    padding: 24px;
+}
+
+.mr-step {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 20px;
+}
+
+.mr-step-label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.mr-step-label label {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.mr-step-label small {
+    color: var(--text-secondary);
+    font-weight: 400;
+}
+
+.mr-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: var(--accent-color);
+    color: #fff;
+    font-size: 0.78rem;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+.mr-full-input {
+    width: 100%;
+    padding: 10px 14px;
+    background: var(--input-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    color: var(--text-primary);
+    font-size: 0.9rem;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.mr-full-input:focus {
+    border-color: var(--accent-color);
+}
+
+.mr-actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 8px;
+}
+
+.mr-results-container {
+    min-height: 120px;
+    max-height: 420px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-top: 8px;
+}
+
+.mr-result-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    background: var(--input-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    transition: border-color 0.2s;
+}
+
+.mr-result-item:hover {
+    border-color: var(--accent-color);
+}
+
+.mr-result-index {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    min-width: 22px;
+    text-align: right;
+}
+
+.mr-result-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    overflow: hidden;
+}
+
+.mr-result-name {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: var(--text-primary);
+}
+
+.mr-result-name svg {
+    color: var(--accent-color);
+    flex-shrink: 0;
+}
+
+.mr-result-path {
+    font-size: 0.77rem;
+    color: var(--text-secondary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.mr-count-badge {
+    font-size: 0.82rem;
+    color: var(--accent-color);
+    font-weight: 600;
+    margin-left: 6px;
+}
+
+/* =========================================================
+   ESTILOS DO MANUAL IN-APP
+   ========================================================= */
+
+#manual-modal.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(15, 23, 42, 0.7);
+    backdrop-filter: blur(8px);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#manual-modal.hidden {
+    display: none !important;
+}
+
+.manual-container {
+    width: 95%;
+    max-width: 1400px;
+    height: 90vh;
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    border-radius: 12px;
+}
+
+.manual-header {
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.manual-title {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.manual-title i {
+    color: var(--primary-color);
+    width: 24px;
+    height: 24px;
+}
+
+.manual-title h3 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text-main);
+    margin: 0;
+}
+
+.manual-body {
+    flex: 1;
+    background: #fff;
+}
+
+#manual-frame {
+    width: 100%;
+    height: 100%;
+    border: none;
+}
+
+.close-btn {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    font-size: 2rem;
+    cursor: pointer;
+    line-height: 1;
+    padding: 0 0.5rem;
+    transition: color 0.2s;
+}
+
+.close-btn:hover {
+    color: var(--danger-color);
+}
+
+.light-theme .manual-container {
+    background: #ffffff;
+}
+

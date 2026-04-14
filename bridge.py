@@ -446,6 +446,91 @@ def finalizar_e_instalar(installer_path):
         print(f"[UPDATE] Erro Crítico ao disparar modo sidecar: {e}")
         return {"error": str(e)}
 
+@eel.expose
+def mr_selecionar_pasta_modelo():
+    """Abre seletor de pasta e retorna o caminho e nome da pasta modelo."""
+    root = get_root()
+    path = filedialog.askdirectory(title="Selecionar Pasta Modelo", parent=root)
+    root.destroy()
+    if not path:
+        return None
+    nome = os.path.basename(path)
+    return {"path": path, "name": nome}
+
+@eel.expose
+def mr_selecionar_raiz_busca():
+    """Abre seletor para definir a unidade/pasta raiz onde a busca será feita."""
+    root = get_root()
+    path = filedialog.askdirectory(title="Selecionar Unidade ou Pasta Raiz para Busca", parent=root)
+    root.destroy()
+    return path if path else None
+
+@eel.expose
+def mr_buscar_pastas(nome_padrao, raiz_busca):
+    """Busca recursiva profunda por pastas com nome exato igual ao padrão."""
+    resultados = []
+    try:
+        raiz_busca = os.path.normpath(raiz_busca)
+        for dirpath, dirnames, _ in os.walk(raiz_busca):
+            for d in dirnames:
+                if d == nome_padrao:
+                    resultados.append(os.path.join(dirpath, d).replace("\\", "/"))
+        return {"status": "success", "resultados": resultados, "total": len(resultados)}
+    except PermissionError as e:
+        return {"status": "partial", "resultados": resultados, "total": len(resultados), "aviso": str(e)}
+    except Exception as e:
+        return {"error": str(e)}
+
+@eel.expose
+def mr_aplicar_renomeacao(resultados, novo_nome):
+    """
+    Para cada pasta encontrada:
+    1. Cria nova pasta com novo_nome no mesmo diretório pai.
+    2. Copia o conteúdo da pasta original para a nova.
+    3. Move a pasta original para subpasta 'Antigos' no mesmo diretório pai.
+    Retorna relatório com sucesso e erros.
+    """
+    import shutil
+    import time
+    sucesso = []
+    erros = []
+
+    for caminho_original in resultados:
+        try:
+            caminho_original = os.path.normpath(caminho_original)
+            pai = os.path.dirname(caminho_original)
+            nome_original = os.path.basename(caminho_original)
+            nova_pasta = os.path.join(pai, novo_nome)
+            pasta_antigos = os.path.join(pai, "Antigos")
+
+            # Garante que a pasta "Antigos" existe
+            os.makedirs(pasta_antigos, exist_ok=True)
+
+            # Cria nova pasta com o novo nome
+            os.makedirs(nova_pasta, exist_ok=True)
+
+            # Copia conteúdo da pasta original para a nova
+            for item in os.listdir(caminho_original):
+                src = os.path.join(caminho_original, item)
+                dst = os.path.join(nova_pasta, item)
+                if os.path.isdir(src):
+                    shutil.copytree(src, dst, dirs_exist_ok=True)
+                else:
+                    shutil.copy2(src, dst)
+
+            # Move pasta original para "Antigos" (evita colisão de nomes)
+            destino_antigos = os.path.join(pasta_antigos, nome_original)
+            if os.path.exists(destino_antigos):
+                destino_antigos = os.path.join(pasta_antigos, f"{nome_original}_{int(time.time())}")
+            shutil.move(caminho_original, destino_antigos)
+
+            sucesso.append(caminho_original.replace("\\", "/"))
+        except Exception as e:
+            erros.append({"path": caminho_original.replace("\\", "/"), "error": str(e)})
+
+    return {"sucesso": sucesso, "erros": erros}
+
+
 def iniciar_app():
     # Engenharia Sênior: Força a inicialização a partir do recurso embutido (_MEIPASS)
     web_resource_path = resource_path('web')

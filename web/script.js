@@ -332,7 +332,28 @@ function configurarEventos() {
     document.getElementById('btn-create').onclick = () => executarAcaoFinal();
     document.getElementById('btn-update').onclick = () => executarAcaoFinal();
     document.getElementById('btn-check-update').onclick = executarVerificacaoManual;
-    document.getElementById('btn-manual').onclick = async () => eel.abrir_manual()();
+    
+    // Manual In-App: Abre o modal e carrega o iframe
+    document.getElementById('btn-manual').onclick = () => {
+        const modal = document.getElementById('manual-modal');
+        const frame = document.getElementById('manual-frame');
+        if (modal && frame) {
+            frame.src = 'manual.html';
+            modal.classList.remove('hidden');
+        }
+    };
+
+    // Botão de Fechar Manual
+    const btnCloseManual = document.getElementById('btn-close-manual');
+    if (btnCloseManual) {
+        btnCloseManual.onclick = () => {
+            const modal = document.getElementById('manual-modal');
+            const frame = document.getElementById('manual-frame');
+            if (modal) modal.classList.add('hidden');
+            if (frame) frame.src = 'about:blank'; // Libera memória
+        };
+    }
+
     document.getElementById('btn-clear').onclick = async () => { if (await confirmar("Limpar", "Reiniciar?")) resetarUI(); };
 
     const confirmarMainFolder = () => {
@@ -999,4 +1020,219 @@ function inicializarResizerUnificado() {
 
 function ativarResizerComSeguranca() { if (document.querySelector('.mirroring-container')) inicializarResizerUnificado(); else setTimeout(ativarResizerComSeguranca, 500); }
 document.addEventListener('DOMContentLoaded', ativarResizerComSeguranca);
+
+/* =========================================================
+   MÓDULO: RENOMEAÇÃO EM MASSA
+   ========================================================= */
+
+const massRenameState = {
+    padraoNome: "",
+    novoNome: "",
+    raizBusca: "",
+    resultados: []
+};
+
+function configurarEventosMassRename() {
+    // Navegação: abrir seção
+    document.getElementById('btn-mass-rename-menu').addEventListener('click', () => {
+        document.getElementById('main-menu-section').classList.add('hidden');
+        document.getElementById('mirroring-section').classList.add('hidden');
+        document.getElementById('btn-mirroring-menu').classList.remove('active'); // Limpa estado do menu vizinho
+        document.getElementById('mass-rename-section').classList.remove('hidden');
+        document.getElementById('btn-mass-rename-menu').classList.add('active');
+        lucide.createIcons();
+    });
+
+    // Auto-limpeza: garante que se o usuário clicar no menu de espelhamento ou outros botões da sidebar, 
+    // a seção de renomeação se oculte automaticamente para não sobrepor layouts.
+    ['btn-mirroring-menu', 'btn-load', 'btn-clear'].forEach(id => {
+        const btn = document.getElementById(id);
+        if (btn) {
+            btn.addEventListener('click', () => {
+                document.getElementById('mass-rename-section').classList.add('hidden');
+                document.getElementById('btn-mass-rename-menu').classList.remove('active');
+            });
+        }
+    });
+
+    // Navegação: voltar
+    document.getElementById('btn-back-from-mass-rename').addEventListener('click', () => {
+        document.getElementById('mass-rename-section').classList.add('hidden');
+        document.getElementById('main-menu-section').classList.remove('hidden');
+        document.getElementById('btn-mass-rename-menu').classList.remove('active');
+    });
+
+    // Passo 1: selecionar pasta modelo
+    document.getElementById('mr-btn-select-model').addEventListener('click', async () => {
+        const res = await eel.mr_selecionar_pasta_modelo()();
+        if (!res) return;
+        massRenameState.padraoNome = res.name;
+        document.getElementById('mr-pattern-input').value = res.name;
+    });
+
+    // Passo 3: selecionar raiz de busca
+    document.getElementById('mr-btn-select-root').addEventListener('click', async () => {
+        const path = await eel.mr_selecionar_raiz_busca()();
+        if (!path) return;
+        massRenameState.raizBusca = path;
+        document.getElementById('mr-root-input').value = path;
+    });
+
+    // Buscar pastas
+    document.getElementById('mr-btn-search').addEventListener('click', async () => {
+        const padrao = document.getElementById('mr-pattern-input').value.trim();
+        const raiz = document.getElementById('mr-root-input').value.trim();
+
+        if (!padrao) {
+            alertar("Atenção", "Selecione uma pasta modelo para detectar o padrão de nome.", 'warning');
+            return;
+        }
+        if (!raiz) {
+            alertar("Atenção", "Selecione a unidade ou pasta raiz para a busca.", 'warning');
+            return;
+        }
+
+        mostrarLoader("Buscando pastas em profundidade... Isso pode levar alguns instantes.");
+        try {
+            const res = await eel.mr_buscar_pastas(padrao, raiz)();
+            esconderLoader();
+
+            if (res.error) {
+                alertar("Erro na Busca", res.error, 'error');
+                return;
+            }
+
+            massRenameState.resultados = res.resultados;
+            mrRenderizarResultados(res.resultados, padrao);
+
+            if (res.status === 'partial' && res.aviso) {
+                alertar("Busca Parcial", `Algumas pastas não puderam ser acessadas (permissão negada).\n\n${res.total} pasta(s) encontrada(s).`, 'warning');
+            }
+        } catch (e) {
+            esconderLoader();
+            alertar("Erro", "Falha ao comunicar com o servidor.", 'error');
+        }
+    });
+
+    // Aplicar renomeação
+    document.getElementById('mr-btn-apply').addEventListener('click', async () => {
+        const novoNome = document.getElementById('mr-new-name-input').value.trim();
+        if (!novoNome) {
+            alertar("Atenção", "Preencha o campo 'Novo Nome da Pasta' antes de aplicar.", 'warning');
+            return;
+        }
+        if (massRenameState.resultados.length === 0) {
+            alertar("Atenção", "Nenhuma pasta encontrada para renomear.", 'warning');
+            return;
+        }
+
+        const confirm = await Swal.fire({
+            title: 'Confirmar Renomeação em Massa',
+            html: `
+                <p>Serão processadas <b>${massRenameState.resultados.length}</b> pasta(s).</p>
+                <br>
+                <p><b>Padrão encontrado:</b> <span style="color:#fbbf24">${massRenameState.padraoNome}</span></p>
+                <p><b>Novo nome:</b> <span style="color:#10b981">${novoNome}</span></p>
+                <br>
+                <p style="font-size:0.85rem;color:#94a3b8">O conteúdo será copiado para a pasta com o novo nome.<br>A pasta original será movida para uma subpasta <b>"Antigos"</b> no mesmo diretório.</p>
+            `,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: 'Confirmar e Aplicar',
+            cancelButtonText: 'Cancelar',
+            confirmButtonColor: '#10b981',
+            cancelButtonColor: '#64748b',
+            background: document.body.classList.contains('light-theme') ? '#ffffff' : '#1e293b',
+            color: document.body.classList.contains('light-theme') ? '#1e293b' : '#f1f5f9',
+            allowOutsideClick: false
+        });
+
+        if (!confirm.isConfirmed) return;
+
+        mostrarLoader("Aplicando renomeação em massa...");
+        try {
+            const res = await eel.mr_aplicar_renomeacao(massRenameState.resultados, novoNome)();
+            esconderLoader();
+            mrMostrarRelatorio(res, novoNome);
+        } catch (e) {
+            esconderLoader();
+            alertar("Erro Crítico", "Falha ao aplicar renomeação.", 'error');
+        }
+    });
+}
+
+function mrRenderizarResultados(resultados, padrao) {
+    const lista = document.getElementById('mr-results-list');
+    const count = document.getElementById('mr-results-count');
+    const btnApply = document.getElementById('mr-btn-apply');
+
+    if (resultados.length === 0) {
+        count.textContent = '';
+        btnApply.classList.add('hidden');
+        lista.innerHTML = `<div class="empty-tree-state"><i data-lucide="search-x"></i><p>Nenhuma pasta com o nome "<b>${padrao}</b>" foi encontrada na raiz selecionada.</p></div>`;
+        lucide.createIcons();
+        return;
+    }
+
+    count.textContent = `(${resultados.length} encontrada${resultados.length > 1 ? 's' : ''})`;
+    btnApply.classList.remove('hidden');
+
+    lista.innerHTML = resultados.map((path, i) => {
+        const pai = path.substring(0, path.lastIndexOf('/'));
+        const nome = path.substring(path.lastIndexOf('/') + 1);
+        return `
+            <div class="mr-result-item">
+                <span class="mr-result-index">${i + 1}</span>
+                <div class="mr-result-info">
+                    <span class="mr-result-name"><i data-lucide="folder"></i> ${nome}</span>
+                    <span class="mr-result-path">${pai}</span>
+                </div>
+            </div>
+        `;
+    }).join('');
+
+    lucide.createIcons();
+}
+
+function mrMostrarRelatorio(res, novoNome) {
+    const total = res.sucesso.length + res.erros.length;
+    const isLight = document.body.classList.contains('light-theme');
+
+    let html = `<p><b>${res.sucesso.length}</b> de <b>${total}</b> pasta(s) processadas com sucesso.</p>`;
+
+    if (res.sucesso.length > 0) {
+        html += `<div style="margin-top:12px;text-align:left;max-height:150px;overflow-y:auto;font-size:0.82rem;color:#10b981;">`;
+        res.sucesso.forEach(p => { html += `<div>✔ ${p}</div>`; });
+        html += `</div>`;
+    }
+
+    if (res.erros.length > 0) {
+        html += `<div style="margin-top:12px;text-align:left;max-height:150px;overflow-y:auto;font-size:0.82rem;color:#ef4444;">`;
+        res.erros.forEach(e => { html += `<div>✘ ${e.path} — ${e.error}</div>`; });
+        html += `</div>`;
+    }
+
+    Swal.fire({
+        title: 'Relatório de Renomeação',
+        html,
+        icon: res.erros.length === 0 ? 'success' : 'warning',
+        confirmButtonText: 'Fechar',
+        confirmButtonColor: '#10b981',
+        background: isLight ? '#ffffff' : '#1e293b',
+        color: isLight ? '#1e293b' : '#f1f5f9'
+    });
+
+    // Limpa a lista de resultados após aplicar
+    massRenameState.resultados = [];
+    document.getElementById('mr-results-count').textContent = '';
+    document.getElementById('mr-btn-apply').classList.add('hidden');
+    document.getElementById('mr-results-list').innerHTML = `
+        <div class="empty-tree-state">
+            <i data-lucide="check-circle"></i>
+            <p>Renomeação concluída. Realize uma nova busca se necessário.</p>
+        </div>`;
+    lucide.createIcons();
+}
+
+document.addEventListener('DOMContentLoaded', configurarEventosMassRename);
 window.addEventListener('load', ativarResizerComSeguranca);
