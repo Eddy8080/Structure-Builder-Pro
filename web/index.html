@@ -19,7 +19,7 @@
     <div class="app-container">
         <!-- Barra Lateral de Ações -->
         <aside class="sidebar">
-            <div class="logo-area">
+            <div class="logo-area" id="btn-home-logo" title="Voltar ao Início">
                 <i data-lucide="folder-tree" class="logo-icon"></i>
                 <h1>Structure<span>Builder</span></h1>
             </div>
@@ -213,7 +213,9 @@
                             </div>
                             <div class="input-with-button">
                                 <input type="text" id="mr-pattern-input" placeholder="Selecione uma pasta modelo para detectar o padrão..." readonly>
-                                <button id="mr-btn-select-model" title="Selecionar Pasta Modelo"><i data-lucide="search"></i></button>
+                                <button id="mr-btn-select-model" class="small-btn info" title="Selecionar Pasta Modelo">
+                                    <i data-lucide="search"></i>
+                                </button>
                             </div>
                         </div>
 
@@ -234,14 +236,10 @@
                             </div>
                             <div class="input-with-button">
                                 <input type="text" id="mr-root-input" placeholder="Selecione a pasta raiz onde a busca será realizada..." readonly>
-                                <button id="mr-btn-select-root" title="Selecionar Unidade ou Pasta Raiz"><i data-lucide="hard-drive"></i></button>
+                                <button id="mr-btn-select-root" class="small-btn info" title="Selecionar Unidade ou Pasta Raiz">
+                                    <i data-lucide="hard-drive"></i>
+                                </button>
                             </div>
-                        </div>
-
-                        <div class="mr-actions">
-                            <button id="mr-btn-search" class="action-btn primary">
-                                <i data-lucide="search"></i> Buscar Pastas em Profundidade
-                            </button>
                         </div>
                     </section>
 

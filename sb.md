@@ -107,3 +107,23 @@ web/
 | `web/style.css` | Estilização premium do modal (blur, transparência, responsividade). |
 | `web/script.js` | Lógica de controle: abertura do modal, carregamento do iframe e limpeza de estado. |
 | `web/manual.html` | Movido da raiz para o diretório `/web` para integração com o servidor local. |
+
+---
+
+### Módulo: Home no Logotipo (Navegação Centralizada)
+
+**Localização na sidebar:** Área superior contendo o ícone e o nome `StructureBuilder`.
+
+**Arquitetura de Navegação:**
+- **Ponto de Ancoragem:** O logotipo foi transformado em um elemento interativo (`#btn-home-logo`) que atua como o botão "Home" da aplicação.
+- **Interatividade (UX):** Implementado cursor `pointer`, efeitos de `hover` (elevação e fundo sutil) e `active scale` (feedback de clique) para sinalizar a funcionalidade.
+- **Reset de Interface:** O clique no logotipo dispara uma função que oculta todos os módulos secundários (Espelhamento e Renomeação em Massa) e restaura a visibilidade do `main-menu-section`.
+- **Sincronia de Estado:** A função limpa as classes `active` dos botões da sidebar, garantindo que o indicador visual de navegação reflita o retorno ao menu principal.
+
+**Arquivos alterados:**
+| Arquivo | Alteração |
+|---|---|
+| `web/index.html` | Adição de ID interativo (`btn-home-logo`) e título informativo à `logo-area`. |
+| `web/style.css` | Estilos de interatividade para `.logo-area` (hover, active, transition). |
+| `web/script.js` | Listener de evento para reset de interface e retorno à Home. |
+

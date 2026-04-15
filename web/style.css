@@ -82,6 +82,25 @@ body {
     gap: 12px;
     margin-bottom: 40px;
     flex-shrink: 0; /* Impede a logo superior de encolher */
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border-radius: 8px;
+    user-select: none;
+    padding: 8px;
+    margin-left: -8px; /* Compensa o padding para manter o alinhamento visual */
+}
+
+.logo-area:hover {
+    background: rgba(255, 255, 255, 0.05);
+    transform: translateY(-1px);
+}
+
+.logo-area:active {
+    transform: scale(0.98);
+}
+
+body.light-theme .logo-area:hover {
+    background: rgba(0, 0, 0, 0.05);
 }
 
 .logo-icon {

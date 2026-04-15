@@ -234,6 +234,19 @@ async function confirmar(titulo, texto, tipo = 'warning') {
 }
 
 function configurarEventos() {
+    // Logo Home: volta para a tela inicial
+    document.getElementById('btn-home-logo').addEventListener('click', () => {
+        document.getElementById('main-menu-section').classList.remove('hidden');
+        document.getElementById('mirroring-section').classList.add('hidden');
+        document.getElementById('mass-rename-section').classList.add('hidden');
+        
+        // Limpa estados ativos dos menus
+        document.getElementById('btn-mirroring-menu').classList.remove('active');
+        document.getElementById('btn-mass-rename-menu').classList.remove('active');
+        
+        lucide.createIcons();
+    });
+
     document.getElementById('btn-select-base').onclick = async () => {
         const path = await eel.selecionar_pasta("Diretório Base")();
         if (path) { state.baseDir = path; document.getElementById('base-dir').value = path; }
@@ -1070,31 +1083,23 @@ function configurarEventosMassRename() {
         document.getElementById('mr-pattern-input').value = res.name;
     });
 
-    // Passo 3: selecionar raiz de busca
+    // Passo 3: selecionar raiz de busca + Disparo Automático
     document.getElementById('mr-btn-select-root').addEventListener('click', async () => {
         const path = await eel.mr_selecionar_raiz_busca()();
         if (!path) return;
         massRenameState.raizBusca = path;
         document.getElementById('mr-root-input').value = path;
-    });
 
-    // Buscar pastas
-    document.getElementById('mr-btn-search').addEventListener('click', async () => {
+        // Disparo Automático da Busca
         const padrao = document.getElementById('mr-pattern-input').value.trim();
-        const raiz = document.getElementById('mr-root-input').value.trim();
-
         if (!padrao) {
-            alertar("Atenção", "Selecione uma pasta modelo para detectar o padrão de nome.", 'warning');
-            return;
-        }
-        if (!raiz) {
-            alertar("Atenção", "Selecione a unidade ou pasta raiz para a busca.", 'warning');
+            alertar("Atenção", "Selecione uma pasta modelo para detectar o padrão de nome antes de selecionar a raiz.", 'warning');
             return;
         }
 
         mostrarLoader("Buscando pastas em profundidade... Isso pode levar alguns instantes.");
         try {
-            const res = await eel.mr_buscar_pastas(padrao, raiz)();
+            const res = await eel.mr_buscar_pastas(padrao, path)();
             esconderLoader();
 
             if (res.error) {
@@ -1113,6 +1118,12 @@ function configurarEventosMassRename() {
             alertar("Erro", "Falha ao comunicar com o servidor.", 'error');
         }
     });
+
+    // Remover ou desativar o listener antigo do botão que foi removido
+    const oldSearchBtn = document.getElementById('mr-btn-search');
+    if (oldSearchBtn) {
+        // ... (lógica antiga removida do HTML, o JS não encontrará o elemento)
+    }
 
     // Aplicar renomeação
     document.getElementById('mr-btn-apply').addEventListener('click', async () => {
